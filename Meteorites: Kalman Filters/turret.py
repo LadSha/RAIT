@@ -194,7 +194,7 @@ class Turret(object):
             #The angle it returns is 180 degrees off, so adjusted it here
             if angle<0:
                 angle=angle+180
-            if current_aim_degree-.8<angle<.8+current_aim_degree:
+            if current_aim_degree-.85<angle<.85+current_aim_degree:
                 return (0, True)
             else:
                 return (math.radians(angle - current_aim_degree), False)
