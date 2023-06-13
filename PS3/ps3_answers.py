@@ -99,10 +99,6 @@ def q4_move(self, motion, tolerance = .001):
 
     steering = motion[0]
     distance = motion[1]
-    # if abs(steering) > max_steering_angle:
-    #     raise ValueError("exceeding max steering angle")
-    # if distance < 0.0:
-    #     raise ValueError("moving backward is not valid")
 
     res.length = self.length
     res.bearing_noise = self.bearing_noise
@@ -140,8 +136,6 @@ def q5_sense(self, add_noise):
             bearing+= random.gauss(0.,self.bearing_noise)
         bearing %= 2. * pi
         Z.append(bearing)
-    return Z
-    # HINT: You will probably need to use the function atan2()
 
     return Z #Leave this line here. Return vector Z of 4 bearings.
 

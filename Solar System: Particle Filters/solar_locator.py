@@ -42,7 +42,7 @@ def move(distance,steering, x, y, orientation):
     x = cx + (sin(orientation) * radius)
     y = cy - (cos(orientation) * radius)
 
-    return ([x, y, orientation])
+    return ((x, y, orientation))
 
 
 def estimate_next_pos(gravimeter_measurement, gravimeter_sense_func, distance, steering, other=None):
@@ -79,27 +79,39 @@ def estimate_next_pos(gravimeter_measurement, gravimeter_sense_func, distance, s
 
     N = 1000
     AU = 1.49597870700e11
-    p = []
-    for i in range(N):
-        dist_from_sun = random.uniform(-4*AU , 4*AU)
-        angle = random.uniform(0, 2 * math.pi)
-        sat_init_x = dist_from_sun * math.cos(angle)
-        sat_init_y = dist_from_sun * math.sin(angle)
-        p.append([sat_init_x, sat_init_y, angle])
+    #create particles
+    if other == None:
+        p = []
+        x = 4 * AU
+        y = 4 * AU
+        for i in range(N):
+            dist_from_sun =  4*AU
+            angle = random.uniform(0, 2 * math.pi)
+            sat_init_x = dist_from_sun * math.cos(angle)
+            sat_init_y = dist_from_sun * math.sin(angle)
+            p.append((sat_init_x, sat_init_y, angle))
+    else:
+        x = other[0][0]
+        y = other[0][1]
+        p=other
+
+    #Motion update
     p2 = []
     for i in range(N):
         p2.append(move(distance,steering, p[i][0], p[i][1], p[i][2]))
     p = p2
-
     w = []
-    bearing_noise = .08
-    for i in range(N):
-        error_bearing = abs(gravimeter_measurement - gravimeter_sense_func(p[i][0],p[i][1]))
-        error_bearing = (error_bearing + pi) % (2.0 * pi) - pi
 
-        error = ((exp((- (error_bearing ** 2) / (bearing_noise ** 2)) / 2.0) /
-                   sqrt(2.0 * pi * (bearing_noise ** 2))))
-        w.append(error)
+    # bearing_noise = .1
+    for i in range(N):
+        dist = sqrt(1 / gravimeter_measurement)
+        prob = random.gauss(dist, 0.01)
+    #     error_bearing = abs(gravimeter_measurement - gravimeter_sense_func(p[i][0],p[i][1]))
+    #     error_bearing = (error_bearing + pi) % (2.0 * pi) - pi
+    #
+    #     error = ((exp((- (error_bearing ** 2) / (bearing_noise ** 2)) / 2.0) /
+    #                sqrt(2.0 * pi * (bearing_noise ** 2))))
+        w.append(prob)
 
 
     p3 = []
@@ -115,18 +127,23 @@ def estimate_next_pos(gravimeter_measurement, gravimeter_sense_func, distance, s
     p = p3
 
 
-
-    # pass one test case once you start to write your solution....
-    xy_estimate = (129744950838.85445, 36955392255.3185)
-
+    orientation = 0.0
+    for i in range(len(p)):
+        x += p[i][0]
+        y += p[i][1]
+        orientation += (((p[i][2] - p[0][2] + pi) % (2.0 * pi))
+                        + p[0][2] - pi)
+    xy_pos =  [(x / len(p)), (y / len(p)), (orientation / len(p))]
+    xy_estimate = (xy_pos[0], xy_pos[1])
+    other = p
     # You may optionally also return a list of (x,y,h) points that you would like
     # the PLOT_PARTICLES=True visualizer to plot for visualization purposes.
     # If you include an optional third value, it will be plotted as the heading
     # of your particle.
-    optional_points_to_plot = [(1*AU, 1*AU), (2*AU, 2*AU), (3*AU, 3*AU)]  # Sample (x,y) to plot
-    optional_points_to_plot = [(1*AU, 1*AU, 0.5), (2*AU, 2*AU, 1.8), (3*AU, 3*AU, 3.2)]  # (x,y,heading)
+    # optional_points_to_plot = [(1*AU, 1*AU), (2*AU, 2*AU), (3*AU, 3*AU)]  # Sample (x,y) to plot
+    # optional_points_to_plot = [(1*AU, 1*AU, 0.5), (2*AU, 2*AU, 1.8), (3*AU, 3*AU, 3.2)]  # (x,y,heading)
 
-    return xy_estimate, other, optional_points_to_plot
+    return xy_estimate, other, p
 
 
 def next_angle(solar_system, percent_illuminated_measurements, percent_illuminated_sense_func,

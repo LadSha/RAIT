@@ -35,7 +35,7 @@ TIME_LIMIT = 15  # seconds
 # Additional flags for debug output and visualization
 ########################################################################
 VERBOSE = False  # False for grading
-PLOT_PARTICLES = False  # False for grading  (Set to True for Visualization!)
+PLOT_PARTICLES = True  # False for grading  (Set to True for Visualization!)
 PAUSE_FIRST = False  # Pause button for visualization enabled at first time step
 PAUSE_DURATION = 3  # Number of seconds to pause for (increase TIME_LIMIT accordingly)
 
