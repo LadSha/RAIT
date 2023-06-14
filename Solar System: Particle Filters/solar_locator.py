@@ -21,10 +21,10 @@ from body import *
 from solar_system import *
 from satellite import *
 
-def move(distance,steering, x, y, orientation):
+
+def move(distance, steering, x, y, orientation):
     # You can replace the INSIDE of this function with the move function you modified in the module quiz
     # Note that you will need to handle motion noise inside your function accordingly
-
 
     length = 10.2
     bearing_noise = 0
@@ -38,14 +38,16 @@ def move(distance,steering, x, y, orientation):
     radius = distance2 / turn
     cx = x - (sin(orientation) * radius)
     cy = y + (cos(orientation) * radius)
-    orientation = (orientation + turn) % (2. * pi)
+    orientation = (orientation + turn) % (2.0 * pi)
     x = cx + (sin(orientation) * radius)
     y = cy - (cos(orientation) * radius)
 
-    return ((x, y, orientation))
+    return (x, y, orientation)
 
 
-def estimate_next_pos(gravimeter_measurement, gravimeter_sense_func, distance, steering, other=None):
+def estimate_next_pos(
+    gravimeter_measurement, gravimeter_sense_func, distance, steering, other=None
+):
     """
     Estimate the next (x,y) position of the satelite.
     This is the function you will have to write for part A.
@@ -79,41 +81,37 @@ def estimate_next_pos(gravimeter_measurement, gravimeter_sense_func, distance, s
 
     N = 1000
     AU = 1.49597870700e11
-    #create particles
+    # create particles
     if other == None:
         p = []
         x = 4 * AU
         y = 4 * AU
         for i in range(N):
-            dist_from_sun =  4*AU
+            dist_from_sun = 4 * AU *random.uniform(0, 1)
             angle = random.uniform(0, 2 * math.pi)
             sat_init_x = dist_from_sun * math.cos(angle)
             sat_init_y = dist_from_sun * math.sin(angle)
             p.append((sat_init_x, sat_init_y, angle))
     else:
-        x = other[0][0]
-        y = other[0][1]
-        p=other
+        p = other
 
-    #Motion update
-    p2 = []
-    for i in range(N):
-        p2.append(move(distance,steering, p[i][0], p[i][1], p[i][2]))
-    p = p2
+    # weight update
+    sigma = 0.08
     w = []
 
-    # bearing_noise = .1
     for i in range(N):
-        dist = sqrt(1 / gravimeter_measurement)
-        prob = random.gauss(dist, 0.01)
-    #     error_bearing = abs(gravimeter_measurement - gravimeter_sense_func(p[i][0],p[i][1]))
-    #     error_bearing = (error_bearing + pi) % (2.0 * pi) - pi
-    #
-    #     error = ((exp((- (error_bearing ** 2) / (bearing_noise ** 2)) / 2.0) /
-    #                sqrt(2.0 * pi * (bearing_noise ** 2))))
-        w.append(prob)
+        curr_weight = (1 / (sigma * sqrt(2 * math.pi))) * exp(
+            -0.5
+            * (
+                (gravimeter_sense_func(p[i][0], p[i][1]) - gravimeter_measurement)
+                / sigma
+            )
+            ** 2
+        )
+        print(curr_weight)
+        w.append(curr_weight)
 
-
+    # resample
     p3 = []
     index = int(random.random() * N) % N
     beta = 0.0
@@ -126,14 +124,19 @@ def estimate_next_pos(gravimeter_measurement, gravimeter_sense_func, distance, s
         p3.append(p[index])
     p = p3
 
+    # Mimic
+    p2 = []
+    for i in range(N):
+        p2.append(move(distance, steering, p[i][0], p[i][1], p[i][2]))
+    p = p2
+    w = []
 
     orientation = 0.0
     for i in range(len(p)):
         x += p[i][0]
         y += p[i][1]
-        orientation += (((p[i][2] - p[0][2] + pi) % (2.0 * pi))
-                        + p[0][2] - pi)
-    xy_pos =  [(x / len(p)), (y / len(p)), (orientation / len(p))]
+        orientation += ((p[i][2] - p[0][2] + pi) % (2.0 * pi)) + p[0][2] - pi
+    xy_pos = [(x / len(p)), (y / len(p)), (orientation / len(p))]
     xy_estimate = (xy_pos[0], xy_pos[1])
     other = p
     # You may optionally also return a list of (x,y,h) points that you would like
@@ -146,8 +149,14 @@ def estimate_next_pos(gravimeter_measurement, gravimeter_sense_func, distance, s
     return xy_estimate, other, p
 
 
-def next_angle(solar_system, percent_illuminated_measurements, percent_illuminated_sense_func,
-               distance, steering, other=None):
+def next_angle(
+    solar_system,
+    percent_illuminated_measurements,
+    percent_illuminated_sense_func,
+    distance,
+    steering,
+    other=None,
+):
     """
     Gets the next angle at which to send out an sos message to the home planet,
     the last planet in the solar system.
@@ -187,12 +196,16 @@ def next_angle(solar_system, percent_illuminated_measurements, percent_illuminat
 
     # You may optionally also return a list of (x,y) or (x,y,h) points that
     # you would like the PLOT_PARTICLES=True visualizer to plot.
-    optional_points_to_plot = [ (1*AU,1*AU), (2*AU,2*AU), (3*AU,3*AU) ]  # Sample plot points
+    optional_points_to_plot = [
+        (1 * AU, 1 * AU),
+        (2 * AU, 2 * AU),
+        (3 * AU, 3 * AU),
+    ]  # Sample plot points
 
     return bearing, xy_estimate, other, optional_points_to_plot
 
 
 def who_am_i():
     # Please specify your GT login ID in the whoami variable (ex: jsmith223).
-    whoami = 'lshamaei3'
+    whoami = "lshamaei3"
     return whoami
