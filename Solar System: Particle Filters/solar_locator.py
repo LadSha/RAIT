@@ -62,12 +62,13 @@ def estimate_next_pos(
     p = []
     if other == None:
         for i in range(N):
-            print(random.uniform(0, 1))
-            dist_from_sun = 4 * AU * random.uniform(0, 1)
-            angle = random.uniform(0, 2 * math.pi)
-            sat_init_x = dist_from_sun * math.cos(angle)
-            sat_init_y = dist_from_sun * math.sin(angle)
-            p.append((sat_init_x, sat_init_y, angle))
+            # dist_from_sun = 4 * AU * random.uniform(0, 1)
+
+            # angle = random.uniform(0, 2 * math.pi)
+            # sat_init_x = dist_from_sun * math.cos(angle)
+            # sat_init_y = dist_from_sun * math.sin(angle)
+
+            p.append((sat_init_x, sat_init_y, math.atan2(sat_init_y)))
     else:
         p = other
 
