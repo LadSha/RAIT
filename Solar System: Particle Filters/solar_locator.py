@@ -22,29 +22,6 @@ from solar_system import *
 from satellite import *
 
 
-def move(distance, steering, x, y, orientation):
-    # You can replace the INSIDE of this function with the move function you modified in the module quiz
-    # Note that you will need to handle motion noise inside your function accordingly
-
-    length = 10.2
-    bearing_noise = 0
-    steering_noise = 0
-    distance_noise = 0
-    steering2 = random.gauss(steering, steering_noise)
-    distance2 = random.gauss(distance, distance_noise)
-
-    turn = tan(steering2) * distance2 / length
-
-    radius = distance2 / turn
-    cx = x - (sin(orientation) * radius)
-    cy = y + (cos(orientation) * radius)
-    orientation = (orientation + turn) % (2.0 * pi)
-    x = cx + (sin(orientation) * radius)
-    y = cy - (cos(orientation) * radius)
-
-    return (x, y, orientation)
-
-
 def estimate_next_pos(
     gravimeter_measurement, gravimeter_sense_func, distance, steering, other=None
 ):
@@ -79,15 +56,14 @@ def estimate_next_pos(
     # example of how to get the gravity magnitude at a point in the solar system:
     # particle_gravimeter_measurement = gravimeter_sense_func(-1*AU, 1*AU)
 
-    N = 1000
+    N = 2000
     AU = 1.49597870700e11
     # create particles
+    p = []
     if other == None:
-        p = []
-        x = 4 * AU
-        y = 4 * AU
         for i in range(N):
-            dist_from_sun = 4 * AU *random.uniform(0, 1)
+            print(random.uniform(0, 1))
+            dist_from_sun = 4 * AU * random.uniform(0, 1)
             angle = random.uniform(0, 2 * math.pi)
             sat_init_x = dist_from_sun * math.cos(angle)
             sat_init_y = dist_from_sun * math.sin(angle)
@@ -96,23 +72,24 @@ def estimate_next_pos(
         p = other
 
     # weight update
-    sigma = 0.08
+    sigma = 9.181367944633899e-07
     w = []
 
     for i in range(N):
         curr_weight = (1 / (sigma * sqrt(2 * math.pi))) * exp(
             -0.5
             * (
-                (gravimeter_sense_func(p[i][0], p[i][1]) - gravimeter_measurement)
-                / sigma
+                (
+                    (gravimeter_sense_func(p[i][0], p[i][1]) - gravimeter_measurement)
+                    / sigma
+                )
+                ** 2
             )
-            ** 2
         )
-        print(curr_weight)
         w.append(curr_weight)
 
     # resample
-    p3 = []
+    p2 = []
     index = int(random.random() * N) % N
     beta = 0.0
     mw = max(w)
@@ -121,30 +98,27 @@ def estimate_next_pos(
         while beta > w[index]:
             beta -= w[index]
             index = (index + 1) % N
-        p3.append(p[index])
-    p = p3
+        p2.append(p[index])
+    p = p2
 
     # Mimic
-    p2 = []
+    p3 = []
     for i in range(N):
-        p2.append(move(distance, steering, p[i][0], p[i][1], p[i][2]))
-    p = p2
-    w = []
+        r = p[i][0] / math.cos(p[i][2])
+        # arc length = beta * radius
+        angle_change = distance / r
+        # fuzz
+        random_fuzz_angle = angle_change * random.uniform(-0.1, 0.1)
+        new_angle = angle_change + random_fuzz_angle + p[i][2]
+        new_x = r * math.cos(new_angle)
+        new_y = r * math.sin(new_angle)
+        p3.append((new_x, new_y, new_angle))
+    p = p3
 
-    orientation = 0.0
-    for i in range(len(p)):
-        x += p[i][0]
-        y += p[i][1]
-        orientation += ((p[i][2] - p[0][2] + pi) % (2.0 * pi)) + p[0][2] - pi
-    xy_pos = [(x / len(p)), (y / len(p)), (orientation / len(p))]
-    xy_estimate = (xy_pos[0], xy_pos[1])
-    other = p
-    # You may optionally also return a list of (x,y,h) points that you would like
-    # the PLOT_PARTICLES=True visualizer to plot for visualization purposes.
-    # If you include an optional third value, it will be plotted as the heading
-    # of your particle.
-    # optional_points_to_plot = [(1*AU, 1*AU), (2*AU, 2*AU), (3*AU, 3*AU)]  # Sample (x,y) to plot
-    # optional_points_to_plot = [(1*AU, 1*AU, 0.5), (2*AU, 2*AU, 1.8), (3*AU, 3*AU, 3.2)]  # (x,y,heading)
+    xy_estimate = (
+        sum([v[0] for v in p]) / float(len(p)),
+        sum([v[1] for v in p]) / float(len(p)),
+    )
 
     return xy_estimate, other, p
 
