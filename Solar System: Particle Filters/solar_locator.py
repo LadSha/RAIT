@@ -56,71 +56,86 @@ def estimate_next_pos(
     # example of how to get the gravity magnitude at a point in the solar system:
     # particle_gravimeter_measurement = gravimeter_sense_func(-1*AU, 1*AU)
 
-    N = 2000
+    N = 1000
     AU = 1.49597870700e11
     # create particles
     p = []
     if other == None:
         for i in range(N):
-            # dist_from_sun = 4 * AU * random.uniform(0, 1)
+            dist_from_sun = 4 * AU * random.uniform(0, 1) + 1
+            angle = random.uniform(0, 2 * math.pi)
+            sat_init_x = dist_from_sun * math.cos(angle)
+            sat_init_y = dist_from_sun * math.sin(angle)
 
-            # angle = random.uniform(0, 2 * math.pi)
-            # sat_init_x = dist_from_sun * math.cos(angle)
-            # sat_init_y = dist_from_sun * math.sin(angle)
+            p.append(
+                (
+                    sat_init_x,
+                    sat_init_y,
+                ),
+            )
 
-            p.append((sat_init_x, sat_init_y, math.atan2(sat_init_y)))
     else:
         p = other
-
     # weight update
-    sigma = 9.181367944633899e-07
+    sigma = 2.099203572901015e-06
+    # sigma = gravimeter_measurement / 2
     w = []
 
     for i in range(N):
+        mu = gravimeter_sense_func(p[i][0], p[i][1])
+
         curr_weight = (1 / (sigma * sqrt(2 * math.pi))) * exp(
-            -0.5
-            * (
-                (
-                    (gravimeter_sense_func(p[i][0], p[i][1]) - gravimeter_measurement)
-                    / sigma
-                )
-                ** 2
-            )
+            -0.5 * (((mu - gravimeter_measurement) / sigma) ** 2)
         )
+
         w.append(curr_weight)
 
-    # resample
+    # # resample
     p2 = []
     index = int(random.random() * N) % N
     beta = 0.0
     mw = max(w)
+    w_resample = []
+    w_total = 0
     for i in range(N):
         beta += random.random() * 2.0 * mw
         while beta > w[index]:
             beta -= w[index]
             index = (index + 1) % N
         p2.append(p[index])
+        w_resample.append(w[index])
+        w_total += w[index]
     p = p2
 
-    # Mimic
+    # # # Mimic
     p3 = []
     for i in range(N):
-        r = p[i][0] / math.cos(p[i][2])
+        r = sqrt(p[i][0] ** 2 + p[i][1] ** 2)
         # arc length = beta * radius
+        theta = atan2(p[i][1], p[i][0])
         angle_change = distance / r
         # fuzz
-        random_fuzz_angle = angle_change * random.uniform(-0.1, 0.1)
-        new_angle = angle_change + random_fuzz_angle + p[i][2]
+        random_fuzz_angle = angle_change * random.uniform(-0.2, 0.2)
+        new_angle = angle_change + theta + random_fuzz_angle
         new_x = r * math.cos(new_angle)
         new_y = r * math.sin(new_angle)
-        p3.append((new_x, new_y, new_angle))
-    p = p3
 
+        p3.append((new_x, new_y))
+    p = p3
+    # total_x = 0
+    # total_y = 0
+    # for i in range(len(p)):
+    #     total_x += p[i][0] * w_resample[i] / w_total
+    #     total_y += p[i][1] * w_resample[i] / w_total
+    # xy_estimate = (total_x, total_y)
     xy_estimate = (
         sum([v[0] for v in p]) / float(len(p)),
         sum([v[1] for v in p]) / float(len(p)),
     )
+    # index = int(random.random() * len(p)) % len(p)
 
+    # xy_estimate = p[index]
+    other = p.copy()
     return xy_estimate, other, p
 
 
@@ -164,20 +179,83 @@ def next_angle(
         optional_points_to_plot: List[Tuple[float, float, float]].
             A list of tuples like (x,y,h) to plot for the visualization
     """
+    N = 1000
+    AU = 1.49597870700e11
+    # create particles
+    p = []
+    if other == None:
+        for i in range(N):
+            dist_from_sun = 4 * AU * random.uniform(0, 1) + 1
+            angle = random.uniform(0, 2 * math.pi)
+            sat_init_x = dist_from_sun * math.cos(angle)
+            sat_init_y = dist_from_sun * math.sin(angle)
 
-    # At what angle to send an SOS message this timestep
-    bearing = 0.0
-    xy_estimate = (110172640485.32968, -66967324464.19617)
+            p.append((sat_init_x, sat_init_y))
+    else:
+        p = other
+    # weight update
+    # sigma = 9.099203572901015e-06
+    # sigma = gravimeter_measurement / 2
+    w = []
 
-    # You may optionally also return a list of (x,y) or (x,y,h) points that
-    # you would like the PLOT_PARTICLES=True visualizer to plot.
-    optional_points_to_plot = [
-        (1 * AU, 1 * AU),
-        (2 * AU, 2 * AU),
-        (3 * AU, 3 * AU),
-    ]  # Sample plot points
+    for i in range(N):
+        mu = percent_illuminated_sense_func(p[i][0], p[i][1])
 
-    return bearing, xy_estimate, other, optional_points_to_plot
+        error = 1.0
+        for j in range(len(percent_illuminated_measurements)):
+            error_bearing = abs(percent_illuminated_measurements[j] - mu)
+            error_bearing = (error_bearing + pi) % (2.0 * pi) - pi
+
+            error *= exp((-(error_bearing**2) / 2.0) / sqrt(2.0 * pi))
+
+    # # resample
+    p2 = []
+    index = int(random.random() * N) % N
+    beta = 0.0
+    mw = max(w)
+    w_resample = []
+    w_total = 0
+    for i in range(N):
+        beta += random.random() * 2.0 * mw
+        while beta > w[index]:
+            beta -= w[index]
+            index = (index + 1) % N
+        p2.append(p[index])
+        w_resample.append(w[index])
+        w_total += w[index]
+    p = p2
+
+    # # # Mimic
+    p3 = []
+    for i in range(N):
+        r = sqrt(p[i][0] ** 2 + p[i][1] ** 2)
+        # arc length = beta * radius
+        ang = atan2(p[i][1], p[i][0])
+        angle_change = distance / r
+        # fuzz
+        random_fuzz_angle = angle_change * random.uniform(-0.2, 0.2)
+        new_angle = angle_change + random_fuzz_angle + ang
+        new_x = r * math.cos(new_angle)
+        new_y = r * math.sin(new_angle)
+        # p3.append((new_x, new_y, new_angle + math.pi / 2))
+        p3.append((new_x, new_y))
+    p = p3
+    # total_x = 0
+    # total_y = 0
+    # for i in range(len(p)):
+    #     total_x += p[i][0] * w_resample[i] / w_total
+    #     total_y += p[i][1] * w_resample[i] / w_total
+    # xy_estimate = (total_x, total_y)
+    xy_estimate = (
+        sum([v[0] for v in p]) / float(len(p)),
+        sum([v[1] for v in p]) / float(len(p)),
+    )
+    # index = int(random.random() * len(p)) % len(p)
+
+    # xy_estimate = p[index]
+    other = p.copy()
+
+    # return bearing, xy_estimate, other, optional_points_to_plot
 
 
 def who_am_i():
