@@ -54,7 +54,7 @@ def mimic(p, steering, distance, L):
 
 def fuzz(p, steering, distance, L):
     p3 = []
-    bound = distance / 100
+    bound = distance / 120
     for i in range(len(p)):
         dist_fuzz = random.uniform(-1 * bound, bound)
         theta = p[i][2]
@@ -111,6 +111,7 @@ def estimate_next_pos(
     AU = 1.49597870700e11
     # create particles
     p = []
+
     if other == None:
         for i in range(N):
             dist_from_sun = 4 * AU * random.uniform(0, 1) + 1
@@ -122,8 +123,9 @@ def estimate_next_pos(
     else:
         p = other
     # weight update
-    # sigma = 9.099203572901015e-06
-    sigma = gravimeter_measurement / 2
+    # sigma = 8.099203572901015e-05
+    sigma = gravimeter_measurement / 2.0
+
     w = []
 
     for i in range(N):
@@ -160,7 +162,7 @@ def estimate_next_pos(
         ang = atan2(p[i][1], p[i][0])
         angle_change = distance / r
         # fuzz
-        random_fuzz_angle = angle_change * random.uniform(-0.2, 0.2)
+        random_fuzz_angle = angle_change * random.uniform(-1.2, 1.2)
         new_angle = angle_change + random_fuzz_angle + ang
         new_x = r * math.cos(new_angle)
         new_y = r * math.sin(new_angle)
@@ -172,7 +174,9 @@ def estimate_next_pos(
         sum([v[0] for v in p]) / float(len(p)),
         sum([v[1] for v in p]) / float(len(p)),
     )
-
+    # length = len(p)
+    # index = int(random.random() * length) % length
+    # xy_estimate = (p[index][0], p[index][1])
     other = p.copy()
     return xy_estimate, other, p
 
@@ -355,7 +359,7 @@ def next_angle(
     for i in range(N):
         mu = percent_illuminated_sense_func(p[i][0], p[i][1])
 
-        error = 1.0
+        error = 1
         for j in range(len(percent_illuminated_measurements)):
             error_bearing = abs(percent_illuminated_measurements[j] - mu[j])
             error_bearing = (error_bearing + pi) % (2.0 * pi) - pi
