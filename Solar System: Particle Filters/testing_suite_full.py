@@ -43,7 +43,7 @@ PAUSE_DURATION = 3  # Number of seconds to pause for (increase TIME_LIMIT accord
 # Toggles for different parts of the assignment
 ########################################################################
 PART_A = True  # Enable/disable Part A (Estimation) - True for grading
-PART_B = False  # Enable/disable Part B (Steering) - True for grading
+PART_B = True  # Enable/disable Part B (Steering) - True for grading
 
 ########################################################################
 # If your debugger does not handle multiprocess debugging very easily
