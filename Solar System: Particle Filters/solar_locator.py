@@ -54,8 +54,9 @@ def mimic(p, steering, distance, L):
 
 def fuzz(p, steering, distance, L):
     p3 = []
+    bound = distance / 100
     for i in range(len(p)):
-        dist_fuzz = random.random() * distance / 100
+        dist_fuzz = random.uniform(-1 * bound, bound)
         theta = p[i][2]
         r = L / tan(steering)
         x_dist = sin(theta) * r
@@ -118,16 +119,13 @@ def estimate_next_pos(
             sat_init_y = dist_from_sun * math.sin(angle)
 
             p.append(
-                (
-                    sat_init_x,
-                    sat_init_y,
-                ),
+                (sat_init_x, sat_init_y, atan2(sat_init_y, sat_init_x) + pi / 2),
             )
 
     else:
         p = other
     # weight update
-    sigma = 2.181367944633899e-7
+    sigma = 2.181367944633899e-6
     # sigma = gravimeter_measurement / 2
     w = []
 
@@ -145,33 +143,39 @@ def estimate_next_pos(
     index = int(random.random() * N) % N
     beta = 0.0
     mw = max(w)
-    w_resample = []
-    w_total = 0
+
     for i in range(N):
         beta += random.random() * 2.0 * mw
         while beta > w[index]:
             beta -= w[index]
             index = (index + 1) % N
         p2.append(p[index])
-        w_resample.append(w[index])
-        w_total += w[index]
+
     p = p2
 
-    # # # Mimic
-    p3 = []
-    for i in range(N):
-        r = sqrt(p[i][0] ** 2 + p[i][1] ** 2)
-        # arc length = beta * radius
-        theta = atan2(p[i][1], p[i][0])
-        angle_change = distance / r
-        # fuzz
-        random_fuzz_angle = angle_change * random.uniform(-0.5, 0.5)
-        new_angle = angle_change + theta + random_fuzz_angle
-        new_x = r * math.cos(new_angle)
-        new_y = r * math.sin(new_angle)
+    # fuzz
+    p_fuzz = fuzz(p, steering, distance, L=10.2)
+    p = p_fuzz.copy()
 
-        p3.append((new_x, new_y))
-    p = p3
+    # # Mimic
+    p_mimic = mimic(p, steering, distance, L=10.2)
+    p = p_mimic.copy()
+
+    # # # # Mimic
+    # p3 = []
+    # for i in range(N):
+    #     r = sqrt(p[i][0] ** 2 + p[i][1] ** 2)
+    #     # arc length = beta * radius
+    #     theta = atan2(p[i][1], p[i][0])
+    #     angle_change = distance / r
+    #     # fuzz
+    #     random_fuzz_angle = angle_change * random.uniform(-0.5, 0.5)
+    #     new_angle = angle_change + theta + random_fuzz_angle
+    #     new_x = r * math.cos(new_angle)
+    #     new_y = r * math.sin(new_angle)
+
+    #     p3.append((new_x, new_y))
+    # p = p3
 
     xy_estimate = (
         sum([v[0] for v in p]) / float(len(p)),
@@ -268,7 +272,6 @@ def next_angle(
 
     p = p2
     # fuzz
-
     p_fuzz = fuzz(p, steering, distance, L=10.2)
     p = p_fuzz.copy()
 
