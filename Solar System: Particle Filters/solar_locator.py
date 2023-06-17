@@ -22,6 +22,56 @@ from solar_system import *
 from satellite import *
 
 
+def get_position(p):
+    x = 0.0
+    y = 0.0
+    orientation = 0.0
+    for i in range(len(p)):
+        x += p[i][0]
+        y += p[i][1]
+        orientation += ((p[i][2] - p[0][2] + pi) % (2.0 * pi)) + p[0][2] - pi
+    return [(x / len(p)), (y / len(p)), (orientation / len(p))]
+
+
+def mimic(p, steering, distance, L):
+    p3 = []
+    for i in range(len(p)):
+        theta = p[i][2]
+        r = L / tan(steering)
+        x_dist = sin(theta) * r
+        y_dist = cos(theta) * r
+        center_x = p[i][0] - x_dist
+        center_y = p[i][1] + y_dist
+        beta = distance / r
+        x_dist_new = sin(theta + beta) * r
+        y_dist_new = cos(theta + beta) * r
+        x_new = center_x + x_dist_new
+        y_new = center_y - y_dist_new
+        theta_new = (theta + beta) % (2 * pi)
+        p3.append((x_new, y_new, theta_new))
+    return p3
+
+
+def fuzz(p, steering, distance, L):
+    p3 = []
+    for i in range(len(p)):
+        dist_fuzz = random.random() * distance / 100
+        theta = p[i][2]
+        r = L / tan(steering)
+        x_dist = sin(theta) * r
+        y_dist = cos(theta) * r
+        center_x = p[i][0] - x_dist
+        center_y = p[i][1] + y_dist
+        beta = dist_fuzz / r
+        x_dist_new = sin(theta + beta) * r
+        y_dist_new = cos(theta + beta) * r
+        x_new = center_x + x_dist_new
+        y_new = center_y - y_dist_new
+        theta_new = (theta + beta) % (2 * pi)
+        p3.append((x_new, y_new, theta_new))
+    return p3
+
+
 def estimate_next_pos(
     gravimeter_measurement, gravimeter_sense_func, distance, steering, other=None
 ):
@@ -77,7 +127,7 @@ def estimate_next_pos(
     else:
         p = other
     # weight update
-    sigma = 2.099203572901015e-06
+    sigma = 2.181367944633899e-7
     # sigma = gravimeter_measurement / 2
     w = []
 
@@ -115,26 +165,19 @@ def estimate_next_pos(
         theta = atan2(p[i][1], p[i][0])
         angle_change = distance / r
         # fuzz
-        random_fuzz_angle = angle_change * random.uniform(-0.2, 0.2)
+        random_fuzz_angle = angle_change * random.uniform(-0.5, 0.5)
         new_angle = angle_change + theta + random_fuzz_angle
         new_x = r * math.cos(new_angle)
         new_y = r * math.sin(new_angle)
 
         p3.append((new_x, new_y))
     p = p3
-    # total_x = 0
-    # total_y = 0
-    # for i in range(len(p)):
-    #     total_x += p[i][0] * w_resample[i] / w_total
-    #     total_y += p[i][1] * w_resample[i] / w_total
-    # xy_estimate = (total_x, total_y)
+
     xy_estimate = (
         sum([v[0] for v in p]) / float(len(p)),
         sum([v[1] for v in p]) / float(len(p)),
     )
-    # index = int(random.random() * len(p)) % len(p)
 
-    # xy_estimate = p[index]
     other = p.copy()
     return xy_estimate, other, p
 
@@ -190,75 +233,61 @@ def next_angle(
             sat_init_x = dist_from_sun * math.cos(angle)
             sat_init_y = dist_from_sun * math.sin(angle)
 
-            p.append((sat_init_x, sat_init_y))
+            p.append((sat_init_x, sat_init_y, atan2(sat_init_y, sat_init_x) + pi / 2))
     else:
         p = other
     # weight update
-    # sigma = 9.099203572901015e-06
-    # sigma = gravimeter_measurement / 2
+
     w = []
 
+    bearing_noise = 0.8
     for i in range(N):
         mu = percent_illuminated_sense_func(p[i][0], p[i][1])
 
         error = 1.0
         for j in range(len(percent_illuminated_measurements)):
-            error_bearing = abs(percent_illuminated_measurements[j] - mu)
+            error_bearing = abs(percent_illuminated_measurements[j] - mu[j])
             error_bearing = (error_bearing + pi) % (2.0 * pi) - pi
 
-            error *= exp((-(error_bearing**2) / 2.0) / sqrt(2.0 * pi))
-
+            error *= exp((-(error_bearing**2) / (bearing_noise**2)) / 2.0) / sqrt(
+                2.0 * pi * (bearing_noise**2)
+            )
+        w.append(error)
     # # resample
     p2 = []
     index = int(random.random() * N) % N
     beta = 0.0
     mw = max(w)
-    w_resample = []
-    w_total = 0
+
     for i in range(N):
         beta += random.random() * 2.0 * mw
         while beta > w[index]:
             beta -= w[index]
             index = (index + 1) % N
         p2.append(p[index])
-        w_resample.append(w[index])
-        w_total += w[index]
+
     p = p2
+    # fuzz
 
-    # # # Mimic
-    p3 = []
-    for i in range(N):
-        r = sqrt(p[i][0] ** 2 + p[i][1] ** 2)
-        # arc length = beta * radius
-        ang = atan2(p[i][1], p[i][0])
-        angle_change = distance / r
-        # fuzz
-        random_fuzz_angle = angle_change * random.uniform(-0.2, 0.2)
-        new_angle = angle_change + random_fuzz_angle + ang
-        new_x = r * math.cos(new_angle)
-        new_y = r * math.sin(new_angle)
-        # p3.append((new_x, new_y, new_angle + math.pi / 2))
-        p3.append((new_x, new_y))
-    p = p3
-    # total_x = 0
-    # total_y = 0
-    # for i in range(len(p)):
-    #     total_x += p[i][0] * w_resample[i] / w_total
-    #     total_y += p[i][1] * w_resample[i] / w_total
-    # xy_estimate = (total_x, total_y)
-    xy_estimate = (
-        sum([v[0] for v in p]) / float(len(p)),
-        sum([v[1] for v in p]) / float(len(p)),
-    )
-    # index = int(random.random() * len(p)) % len(p)
+    p_fuzz = fuzz(p, steering, distance, L=10.2)
+    p = p_fuzz.copy()
 
-    # xy_estimate = p[index]
+    # # Mimic
+    p_mimic = mimic(p, steering, distance, L=10.2)
+    p = p_mimic.copy()
+
+    x_estimate, y_esimate, theta_estimate = get_position(p)
+
     other = p.copy()
 
-    # return bearing, xy_estimate, other, optional_points_to_plot
+    return theta_estimate, (x_estimate, y_esimate), other, p
 
 
 def who_am_i():
     # Please specify your GT login ID in the whoami variable (ex: jsmith223).
     whoami = "lshamaei3"
     return whoami
+
+
+if __name__ == "__main__":
+    print(mimic([(0.118, -0.54, 0.1)], 0.166, 1.07, 0.2))

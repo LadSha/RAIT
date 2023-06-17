@@ -34,22 +34,22 @@ TIME_LIMIT = 15  # seconds
 ########################################################################
 # Additional flags for debug output and visualization
 ########################################################################
-VERBOSE = False  # False for grading
+VERBOSE = True  # False for grading
 PLOT_PARTICLES = True  # False for grading  (Set to True for Visualization!)
-PAUSE_FIRST = False  # Pause button for visualization enabled at first time step
+PAUSE_FIRST = True  # Pause button for visualization enabled at first time step
 PAUSE_DURATION = 3  # Number of seconds to pause for (increase TIME_LIMIT accordingly)
 
 ########################################################################
 # Toggles for different parts of the assignment
 ########################################################################
-PART_A = True  # Enable/disable Part A (Estimation) - True for grading
+PART_A = False  # Enable/disable Part A (Estimation) - True for grading
 PART_B = True  # Enable/disable Part B (Steering) - True for grading
 
 ########################################################################
 # If your debugger does not handle multiprocess debugging very easily
 # then when debugging set the following flag true.
 ########################################################################
-DEBUGGING_SINGLE_PROCESS = False
+DEBUGGING_SINGLE_PROCESS = True
 
 WINDOW_SIZE = 500  # Size of the window in "units"
 
@@ -1354,6 +1354,7 @@ if __name__ == "__main__":
 
             try:
                 for i, suite in zip(list(range(1, 1 + len(suites))), suites):
+                    # for i, suite in zip(list(range(2, 1 + len(suites))), suites):
                     print("====================\nTests for Part {}:".format(i))
 
                     result = unittest.TestResult()
