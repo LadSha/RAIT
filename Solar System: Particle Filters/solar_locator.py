@@ -166,7 +166,6 @@ def estimate_next_pos(
         new_angle = angle_change + random_fuzz_angle + ang
         new_x = r * math.cos(new_angle)
         new_y = r * math.sin(new_angle)
-        # p3.append((new_x, new_y, new_angle + math.pi / 2))
         p3.append((new_x, new_y))
     p = p3
 
@@ -174,9 +173,7 @@ def estimate_next_pos(
         sum([v[0] for v in p]) / float(len(p)),
         sum([v[1] for v in p]) / float(len(p)),
     )
-    # length = len(p)
-    # index = int(random.random() * length) % length
-    # xy_estimate = (p[index][0], p[index][1])
+
     other = p.copy()
     return xy_estimate, other, p
 
@@ -402,11 +399,6 @@ def next_angle(
     delta_y = y_esimate - home_planet_y
 
     abs_angle = atan2(delta_y, delta_x)
-    # if delta_x * delta_y < 0:
-    #     bearing = abs_angle * -1 + pi / 2
-
-    # else:
-    #     bearing = abs_angle
 
     return (
         abs_angle,
@@ -422,5 +414,3 @@ def who_am_i():
     return whoami
 
 
-if __name__ == "__main__":
-    print(mimic([(0.118, -0.54, 0.1)], 0.166, 1.07, 0.2))
