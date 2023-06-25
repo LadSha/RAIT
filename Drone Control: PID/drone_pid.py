@@ -9,6 +9,9 @@
 #
 ######################################################################
 
+def adjust_tau(curr,delta):
+
+
 
 def pid_thrust(
     target_elevation, drone_elevation, tau_p=0, tau_d=0, tau_i=0, data: dict() = {}
@@ -35,7 +38,19 @@ def pid_thrust(
                 max_rpm_reached: (True|False) - Whether Drone has reached max RPM in both its rotors.
     """
 
+    if "Tp" in data:
+        tau_p = data["Tp"]
+    if "Td" in data:
+        tau_d = data["Td"]
+    if "Ti" in data:
+        tau_d = data["Ti"]
+
+    error = 0.1
+    if abs(target_elevation-drone_elevation)<error:
+        deltaP =
+
     thrust = 0
+
 
     return thrust, data
 
