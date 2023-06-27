@@ -9,7 +9,7 @@
 #
 ######################################################################
 
-VISUALIZE = True
+VISUALIZE = False
 VISUALIZE_TWIDDLE = False
 
 if VISUALIZE or VISUALIZE_TWIDDLE:
@@ -31,7 +31,7 @@ except Exception as e:
 
 DEBUGGING_SINGLE_PROCESS = False
 
-DEBUG = True # This will output all timesteps for 
+DEBUG = False # This will output all timesteps for
               # all test cases, so use with a single 
               # test case to debug, or output to a file 
               # to analyse separately.
