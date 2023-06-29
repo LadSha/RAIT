@@ -29,14 +29,14 @@ try:
 except Exception as e:
     studentExc = traceback.format_exc()
 
-DEBUGGING_SINGLE_PROCESS = False
+DEBUGGING_SINGLE_PROCESS = True
 
 DEBUG = False # This will output all timesteps for
               # all test cases, so use with a single 
               # test case to debug, or output to a file 
               # to analyse separately.
 
-DEBUG_TWIDDLE = False
+DEBUG_TWIDDLE = True
 
 if VISUALIZE or VISUALIZE_TWIDDLE:
     DEBUGGING_SINGLE_PROCESS = True

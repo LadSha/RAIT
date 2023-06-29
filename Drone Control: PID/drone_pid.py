@@ -10,7 +10,13 @@
 ######################################################################
 
 
-def get_score(hover_error, max_allowed_velocity, drone_max_velocity, max_allowed_oscillations, total_oscillations):
+def get_score(
+    hover_error,
+    max_allowed_velocity,
+    drone_max_velocity,
+    max_allowed_oscillations,
+    total_oscillations,
+):
     vel_score = 1
 
     if max_allowed_velocity != 0 and drone_max_velocity > max_allowed_velocity:
@@ -18,7 +24,6 @@ def get_score(hover_error, max_allowed_velocity, drone_max_velocity, max_allowed
         vel_score = min(vel_score, 1)
 
     osc_score = 1
-
 
     if max_allowed_oscillations != -1 and total_oscillations > max_allowed_oscillations:
         osc_score = max_allowed_oscillations / total_oscillations
@@ -55,12 +60,11 @@ def pid_thrust(
     """
 
     if "diff" not in data:
-        data["diff"]=[0]
-
+        data["diff"] = [0]
 
     error = target_elevation - drone_elevation
     error_derivative = error - data["diff"][-1]
-    thrust = tau_d*error_derivative + tau_p * error
+    thrust = tau_d * error_derivative + tau_p * error
 
     data["diff"].append(error)
     return thrust, data
@@ -87,12 +91,11 @@ def pid_roll(target_x, drone_x, tau_p=0, tau_d=0, tau_i=0, data: dict() = {}):
     """
 
     if "diff" not in data:
-        data["diff"]=[0]
-
+        data["diff"] = [0]
 
     error = target_x - drone_x
     error_derivative = error - data["diff"][-1]
-    roll = tau_d*error_derivative + tau_p * error
+    roll = tau_d * error_derivative + tau_p * error
 
     data["diff"].append(error)
     return roll, data
@@ -126,7 +129,7 @@ def find_parameters_thrust(run_callback, tune="thrust", DEBUG=False, VISUALIZE=F
     """
 
     # Initialize a list to contain your gain values that you want to tune
-    params = [5, 0.1, 0.1]
+    params = [0.1, 0.1, 0.1]
 
     # Create dicts to pass the parameters to run_callback
     thrust_params = {"tau_p": params[0], "tau_d": params[1], "tau_i": params[2]}
@@ -135,133 +138,196 @@ def find_parameters_thrust(run_callback, tune="thrust", DEBUG=False, VISUALIZE=F
     roll_params = {"tau_p": 0, "tau_d": 0, "tau_i": 0}
 
     # Call run_callback, passing in the dicts of thrust and roll gain values
-    (
+    # (
+    #     hover_error,
+    #     max_allowed_velocity,
+    #     drone_max_velocity,
+    #     max_allowed_oscillations,
+    #     total_oscillations,
+    # ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
+
+    # Calculate best_error from above returned values
+    best_error = None
+
+    delta_p = 0.1
+    delta_d = 0.1
+    delta_i = 0.1
+
+    
+
+    # min_hover_error = get_score(
+    #     hover_error,
+    #     max_allowed_velocity,
+    #     drone_max_velocity,
+    #     max_allowed_oscillations,
+    #     total_oscillations,
+    # )
+
+    tol = 0.1
+    min_hover_error = 1000
+    prev_tau_p=1000
+    while prev_tau_p-thrust_params["tau_p"] > 0.04:
+        (
         hover_error,
         max_allowed_velocity,
         drone_max_velocity,
         max_allowed_oscillations,
         total_oscillations,
-    ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
-
-    # Calculate best_error from above returned values
-    best_error = None
-
-    delta_p = 0.5
-    delta_d = 0.1
-    delta_i = 0.1
-
-
-    min_hover_error = get_score(hover_error, max_allowed_velocity, drone_max_velocity, max_allowed_oscillations, total_oscillations)
-
-
-
-    tol = 0.1
-    while min_hover_error > tol:
-        thrust_params["tau_p"] = delta_p + thrust_params["tau_p"]
-
-        (
-            hover_error,
-            max_allowed_velocity,
-            drone_max_velocity,
-            max_allowed_oscillations,
-            total_oscillations,
         ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
+        delta_p=delta_p*.9
+        prev_tau_p = thrust_params["tau_p"]
+        if drone_max_velocity>=max_allowed_velocity or hover_error<0:
+            thrust_params["tau_p"]-=delta_p
+        else:
+            thrust_params["tau_p"]+=delta_p
+        min_hover_error = hover_error
+
 
         # if drone_max_velocity>max_allowed_velocity:
-        #     thrust_params["tau_p"] = thrust_params["tau_p"] - delta_p*(drone_max_velocity-max_allowed_velocity)/drone_max_velocity
+        #     new_tau_p = thrust_params["tau_p"] - 0.9*delta_p*max_allowed_velocity/drone_max_velocity
 
-        curr_hover_error = get_score(hover_error, max_allowed_velocity, drone_max_velocity, max_allowed_oscillations, total_oscillations)
+        # if max_allowed_velocity<=drone_max_velocity:
+        #     new_tau_p = thrust_params["tau_p"]-delta_p/2
+        # new_tau_p = delta_p + thrust_params["tau_p"]
 
-        if curr_hover_error < min_hover_error:
-            min_hover_error= curr_hover_error
-            delta_p *= 1.25
-        else:
-            delta_p=delta_p*-1
-            thrust_params["tau_p"] = 2*delta_p + thrust_params["tau_p"]
-            (
-                hover_error,
-                max_allowed_velocity,
-                drone_max_velocity,
-                max_allowed_oscillations,
-                total_oscillations,
-            ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
-            new_hover_error = get_score(hover_error, max_allowed_velocity, drone_max_velocity, max_allowed_oscillations, total_oscillations)
-            if new_hover_error < min_hover_error:
-                min_hover_error = new_hover_error
-                delta_p *= 1.25
-            else:
-                thrust_params["tau_p"] = -2 * delta_p + thrust_params["tau_p"]
-                delta_p*=0.75
-        #Update derivative
-        thrust_params["tau_d"] = delta_d + thrust_params["tau_d"]
+        # (
+        #     hover_error,
+        #     max_allowed_velocity,
+        #     drone_max_velocity,
+        #     max_allowed_oscillations,
+        #     total_oscillations,
+        # ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
 
-        (
-            hover_error,
-            max_allowed_velocity,
-            drone_max_velocity,
-            max_allowed_oscillations,
-            total_oscillations,
-        ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
+        # if drone_max_velocity>max_allowed_velocity:
+        #     thrust_params["tau_p"] = thrust_params["tau_p"] - 0.9*delta_p*max_allowed_velocity/drone_max_velocity
 
-        curr_hover_error = get_score(hover_error, max_allowed_velocity, drone_max_velocity, max_allowed_oscillations,
-                                     total_oscillations)
+        # curr_hover_error = get_score(
+        #     hover_error,
+        #     max_allowed_velocity,
+        #     drone_max_velocity,
+        #     max_allowed_oscillations,
+        #     total_oscillations,
+        # )
 
-        if curr_hover_error < min_hover_error:
-            min_hover_error = curr_hover_error
-            delta_d *= 1.25
-        else:
-            delta_d = delta_d * -1
-            thrust_params["tau_d"] = 2 * delta_d + thrust_params["tau_d"]
-            (
-                hover_error,
-                max_allowed_velocity,
-                drone_max_velocity,
-                max_allowed_oscillations,
-                total_oscillations,
-            ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
-            new_hover_error = get_score(hover_error, max_allowed_velocity, drone_max_velocity, max_allowed_oscillations,
-                                        total_oscillations)
-            if new_hover_error < min_hover_error:
-                min_hover_error = new_hover_error
-                delta_d *= 1.25
-            else:
-                thrust_params["tau_d"] = -2 * delta_d + thrust_params["tau_d"]
-                delta_d *= 0.75
-        #Update integral
-        thrust_params["tau_i"] = delta_i + thrust_params["tau_i"]
+        # if curr_hover_error < min_hover_error:
+        #     min_hover_error = curr_hover_error
 
-        (
-            hover_error,
-            max_allowed_velocity,
-            drone_max_velocity,
-            max_allowed_oscillations,
-            total_oscillations,
-        ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
+        #     delta_p += 1.01
+        # else:
+        #     delta_p = delta_p * -1
+        #     thrust_params["tau_p"] = 2 * delta_p + thrust_params["tau_p"]
+        #     (
+        #         hover_error,
+        #         max_allowed_velocity,
+        #         drone_max_velocity,
+        #         max_allowed_oscillations,
+        #         total_oscillations,
+        #     ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
+        #     new_hover_error = get_score(
+        #         hover_error,
+        #         max_allowed_velocity,
+        #         drone_max_velocity,
+        #         max_allowed_oscillations,
+        #         total_oscillations,
+        #     )
+        #     if new_hover_error < min_hover_error:
+        #         min_hover_error = new_hover_error
+        #         delta_p *= 1.01
+        #     else:
+        #         thrust_params["tau_p"] = -2 * delta_p + thrust_params["tau_p"]
+        #         delta_p *= 0.75
 
-        curr_hover_error = get_score(hover_error, max_allowed_velocity, drone_max_velocity, max_allowed_oscillations,
-                                     total_oscillations)
+        # print(thrust_params, hover_error)
+        # Update derivative
+        # thrust_params["tau_d"] = delta_d + thrust_params["tau_d"]
 
-        if curr_hover_error < min_hover_error:
-            min_hover_error = curr_hover_error
-            delta_i *= 1.25
-        else:
-            delta_i = delta_i * -1
-            thrust_params["tau_i"] = 2 * delta_i + thrust_params["tau_i"]
-            (
-                hover_error,
-                max_allowed_velocity,
-                drone_max_velocity,
-                max_allowed_oscillations,
-                total_oscillations,
-            ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
-            new_hover_error = get_score(hover_error, max_allowed_velocity, drone_max_velocity, max_allowed_oscillations,
-                                        total_oscillations)
-            if new_hover_error < min_hover_error:
-                min_hover_error = new_hover_error
-                delta_i *= 1.25
-            else:
-                thrust_params["tau_i"] = -2 * delta_i + thrust_params["tau_i"]
-                delta_i *= 0.75
+        # (
+        #     hover_error,
+        #     max_allowed_velocity,
+        #     drone_max_velocity,
+        #     max_allowed_oscillations,
+        #     total_oscillations,
+        # ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
+
+        # curr_hover_error = get_score(
+        #     hover_error,
+        #     max_allowed_velocity,
+        #     drone_max_velocity,
+        #     max_allowed_oscillations,
+        #     total_oscillations,
+        # )
+
+        # if curr_hover_error < min_hover_error:
+        #     min_hover_error = curr_hover_error
+        #     delta_d *= 1.25
+        # else:
+        #     delta_d = delta_d * -1
+        #     thrust_params["tau_d"] = 2 * delta_d + thrust_params["tau_d"]
+        #     (
+        #         hover_error,
+        #         max_allowed_velocity,
+        #         drone_max_velocity,
+        #         max_allowed_oscillations,
+        #         total_oscillations,
+        #     ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
+        #     new_hover_error = get_score(
+        #         hover_error,
+        #         max_allowed_velocity,
+        #         drone_max_velocity,
+        #         max_allowed_oscillations,
+        #         total_oscillations,
+        #     )
+        #     if new_hover_error < min_hover_error:
+        #         min_hover_error = new_hover_error
+        #         delta_d *= 1.25
+        #     else:
+        #         thrust_params["tau_d"] = -2 * delta_d + thrust_params["tau_d"]
+        #         delta_d *= 0.75
+        # # Update integral
+        # thrust_params["tau_i"] = delta_i + thrust_params["tau_i"]
+
+        # (
+        #     hover_error,
+        #     max_allowed_velocity,
+        #     drone_max_velocity,
+        #     max_allowed_oscillations,
+        #     total_oscillations,
+        # ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
+
+        # curr_hover_error = get_score(
+        #     hover_error,
+        #     max_allowed_velocity,
+        #     drone_max_velocity,
+        #     max_allowed_oscillations,
+        #     total_oscillations,
+        # )
+
+        # if curr_hover_error < min_hover_error:
+        #     min_hover_error = curr_hover_error
+        #     delta_i *= 1.25
+        # else:
+        #     delta_i = delta_i * -1
+        #     thrust_params["tau_i"] = 2 * delta_i + thrust_params["tau_i"]
+        #     (
+        #         hover_error,
+        #         max_allowed_velocity,
+        #         drone_max_velocity,
+        #         max_allowed_oscillations,
+        #         total_oscillations,
+        #     ) = run_callback(thrust_params, roll_params, VISUALIZE=VISUALIZE)
+        #     new_hover_error = get_score(
+        #         hover_error,
+        #         max_allowed_velocity,
+        #         drone_max_velocity,
+        #         max_allowed_oscillations,
+        #         total_oscillations,
+        #     )
+        #     if new_hover_error < min_hover_error:
+        #         min_hover_error = new_hover_error
+        #         delta_i *= 1.25
+        #     else:
+        #         thrust_params["tau_i"] = -2 * delta_i + thrust_params["tau_i"]
+        #         delta_i *= 0.75
 
     # Implement your code to use twiddle to tune the params and find the best_error
 
@@ -323,17 +389,11 @@ def find_parameters_with_int(run_callback, tune="thrust", DEBUG=False, VISUALIZE
 
     osc_score = 1
 
-
     if max_allowed_oscillations != -1 and total_oscillations > max_allowed_oscillations:
         osc_score = max_allowed_oscillations / total_oscillations
         osc_score = min(osc_score, 1)
 
-    min_error = (hover_error / vel_score / osc_score)
-
-
-
-
-
+    min_error = hover_error / vel_score / osc_score
 
     # Calculate best_error from above returned values
     best_error = None
