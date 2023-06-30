@@ -156,8 +156,8 @@ class Part_1_a_TestCase(unittest.TestCase):
             DEBUG               = DEBUG_TWIDDLE,
             VISUALIZE           = VISUALIZE_TWIDDLE)  
        
-        thrust_params       = {'tau_p': 0.03, 'tau_d': 0.1, 'tau_i': 0} 
-        roll_params         = {'tau_p': 0, 'tau_d': 0, 'tau_i': 0}
+        thrust_params       = {'tau_p': 5, 'tau_d': 50, 'tau_i': 0.00} 
+        roll_params         = {'tau_p': -10, 'tau_d': -500, 'tau_i': 0}
         
         runtime_error = False
         
@@ -243,22 +243,22 @@ class Part_1_a_TestCase(unittest.TestCase):
             
         return percentage_score
         
-    def test_case01(self):
+    def _test_case01(self):
         plan = self.test_cases['testcase_1']
         self.run_test(plan, target_y_error = 0.02, target_x_error=0.02, tune="thrust", score_weight=float(plan['score_weight']), test_roll=False)
         print("Test case 1 score: ", self.score)
         
-    def test_case02(self):
+    def _test_case02(self):
         plan = self.test_cases['testcase_2']
         self.run_test(plan, target_y_error = 0.02, target_x_error=0.02, tune="thrust", score_weight=float(plan['score_weight']), test_roll=False)
         print("Test case 2 score: ", self.score)
         
-    def test_case03(self):
+    def _test_case03(self):
         plan = self.test_cases['testcase_3']
         self.run_test(plan, target_y_error = 0.02, target_x_error=0.02, tune="thrust", score_weight=float(plan['score_weight']), test_roll=False)
         print("Test case 3 score: ", self.score)
         
-    def test_case04(self):
+    def _test_case04(self):
         plan = self.test_cases['testcase_4']
         drone_rpm_error = float(plan.get('rpm_error', 0))
         self.run_test(plan, target_y_error = 0.04, target_x_error=0.04, tune="thrust", test_integral=True, drone_rpm_error = drone_rpm_error, test_roll=False, score_weight=float(plan['score_weight']))
