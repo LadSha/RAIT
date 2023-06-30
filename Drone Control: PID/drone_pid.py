@@ -213,10 +213,62 @@ def find_parameters_thrust(run_callback, tune="thrust", DEBUG=False, VISUALIZE=F
             else:
                 delta_p*=0.75
                 # delta_p_increase*=0.75
+        
+        
+        #update D
+        thrust_params_old = thrust_params.copy()
+        new_thrust_params = thrust_params.copy()
+        new_thrust_params["tau_d"] += delta_d
+
+        (
+        hover_error,
+        max_allowed_velocity,
+        drone_max_velocity,
+        max_allowed_oscillations,
+        total_oscillations,
+        ) = run_callback(new_thrust_params, roll_params, VISUALIZE=VISUALIZE)
+
+        new_hover_error = get_score(hover_error,
+        max_allowed_velocity,
+        drone_max_velocity,
+        max_allowed_oscillations,
+        total_oscillations,)
+
+        if min_hover_error>new_hover_error:
+            min_hover_error = new_hover_error
+            thrust_params = new_thrust_params
+            delta_d*=1.2
+            change_count = 0
+        else:
+            new_thrust_params = thrust_params.copy()
+            new_thrust_params["tau_d"] -= delta_d
+            (
+            hover_error,
+            max_allowed_velocity,
+            drone_max_velocity,
+            max_allowed_oscillations,
+            total_oscillations,
+            ) = run_callback(new_thrust_params, roll_params, VISUALIZE=VISUALIZE)
+
+            new_hover_error = get_score(hover_error,
+            max_allowed_velocity,
+            drone_max_velocity,
+            max_allowed_oscillations,
+            total_oscillations,)
+            if min_hover_error>new_hover_error:
+                min_hover_error = new_hover_error
+                thrust_params = new_thrust_params
+                delta_d*=1.2
+                change_count = 0
+            else:
+                delta_d*=0.75
+
+
+
+
         change = abs(thrust_params_old["tau_p"] - thrust_params["tau_p"]) + abs(thrust_params_old["tau_d"] - thrust_params['tau_d'])+abs(thrust_params_old["tau_i"] - thrust_params["tau_i"])
         if change ==0:
             change_count+=1
-        print(thrust_params, min_hover_error)
 
     # min_hover_error = get_score(
     #     hover_error,

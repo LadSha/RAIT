@@ -9,7 +9,7 @@
 #
 ######################################################################
 
-VISUALIZE = True
+VISUALIZE = False
 VISUALIZE_TWIDDLE = False
 
 if VISUALIZE or VISUALIZE_TWIDDLE:
@@ -36,7 +36,7 @@ DEBUG = False # This will output all timesteps for
               # test case to debug, or output to a file 
               # to analyse separately.
 
-DEBUG_TWIDDLE = True
+DEBUG_TWIDDLE = False
 
 if VISUALIZE or VISUALIZE_TWIDDLE:
     DEBUGGING_SINGLE_PROCESS = True
@@ -156,7 +156,7 @@ class Part_1_a_TestCase(unittest.TestCase):
             DEBUG               = DEBUG_TWIDDLE,
             VISUALIZE           = VISUALIZE_TWIDDLE)  
        
-        thrust_params       = {'tau_p': 0.0, 'tau_d': 0, 'tau_i': 0} 
+        thrust_params       = {'tau_p': 0.03, 'tau_d': 0.1, 'tau_i': 0} 
         roll_params         = {'tau_p': 0, 'tau_d': 0, 'tau_i': 0}
         
         runtime_error = False
@@ -248,38 +248,38 @@ class Part_1_a_TestCase(unittest.TestCase):
         self.run_test(plan, target_y_error = 0.02, target_x_error=0.02, tune="thrust", score_weight=float(plan['score_weight']), test_roll=False)
         print("Test case 1 score: ", self.score)
         
-    def _test_case02(self):
+    def test_case02(self):
         plan = self.test_cases['testcase_2']
         self.run_test(plan, target_y_error = 0.02, target_x_error=0.02, tune="thrust", score_weight=float(plan['score_weight']), test_roll=False)
         print("Test case 2 score: ", self.score)
         
-    def _test_case03(self):
+    def test_case03(self):
         plan = self.test_cases['testcase_3']
         self.run_test(plan, target_y_error = 0.02, target_x_error=0.02, tune="thrust", score_weight=float(plan['score_weight']), test_roll=False)
         print("Test case 3 score: ", self.score)
         
-    def _test_case04(self):
+    def test_case04(self):
         plan = self.test_cases['testcase_4']
         drone_rpm_error = float(plan.get('rpm_error', 0))
         self.run_test(plan, target_y_error = 0.04, target_x_error=0.04, tune="thrust", test_integral=True, drone_rpm_error = drone_rpm_error, test_roll=False, score_weight=float(plan['score_weight']))
         print("Test case 4 score: ", self.score)
         
-    def _test_case05(self):
+    def test_case05(self):
         plan = self.test_cases['testcase_5']
         self.run_test(plan, target_y_error = 0.035, target_x_error=0.035, tune="both", score_weight=float(plan['score_weight']))
         print("Test case 5 score: ", self.score)
         
-    def _test_case06(self):
+    def test_case06(self):
         plan = self.test_cases['testcase_6']
         self.run_test(plan, target_y_error = 0.04, target_x_error=0.04, tune="both", score_weight=float(plan['score_weight']))
         print("Test case 6 score: ", self.score)
         
-    def _test_case07(self):
+    def test_case07(self):
         plan = self.test_cases['testcase_7']
         self.run_test(plan, target_y_error = 0.04, target_x_error=0.04, tune="both", score_weight=float(plan['score_weight']))
         print("Test case 7 score: ", self.score)
         
-    def _test_case08(self):
+    def test_case08(self):
         plan = self.test_cases['testcase_8']
         self.run_test(plan, target_y_error = 0.04, target_x_error=0.04, tune="both", score_weight=float(plan['score_weight']))
         print("Test case 8 score: ", self.score)
