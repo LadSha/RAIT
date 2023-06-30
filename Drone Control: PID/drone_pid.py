@@ -512,7 +512,7 @@ def find_parameters_with_roll(run_callback, tune="both", DEBUG=False, VISUALIZE=
     thrust_params = {"tau_p": params[0], "tau_d": params[1], "tau_i": params[2]}
 
     # If tuning roll, then also initialize gain values for roll PID controller
-    roll_params = {"tau_p": 0, "tau_d": 0, "tau_i": 0}
+    roll_params = {"tau_p": -0.1, "tau_d": -0.2, "tau_i": 0}
 
     # Call run_callback, passing in the dicts of thrust and roll gain values
     (
