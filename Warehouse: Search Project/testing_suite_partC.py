@@ -30,7 +30,7 @@ except Exception as e:
 # For debugging this flag can be set to True to print state 
 # which could result in a timeout
 ########################################################################
-VERBOSE_FLAG = False
+VERBOSE_FLAG = True
 
 ########################################################################
 # For visualization this flag can be set to True to display a GUI
@@ -48,7 +48,7 @@ TIME_LIMIT = 5  # seconds
 # If your debugger does not handle multiprocess debugging very easily
 # then when debugging set the following flag true.
 ########################################################################
-DEBUGGING_SINGLE_PROCESS = False
+DEBUGGING_SINGLE_PROCESS = True
 
 # Necessary for GUI visualization, don't modify these lines
 if VISUALIZE_FLAG:

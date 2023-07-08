@@ -114,6 +114,11 @@ class DeliveryPlanner_PartA:
                  'lift 2',
                  'down s']
 
+
+
+
+
+
         return moves
 
     def plan_delivery(self, debug=False):
@@ -277,7 +282,7 @@ class DeliveryPlanner_PartB:
         collision_cost = 100
         if pickup_box:
             # To box policy
-            pass
+            
             value = [[float("inf") for col in range(len(grid[0]))] for row in range(len(grid))]
             policy = [[" " for col in range(len(grid[0]))] for row in range(len(grid))]
 
@@ -301,7 +306,7 @@ class DeliveryPlanner_PartB:
                                     floor_cost = collision_cost
                                     v2 = self.delta_cost[a] + floor_cost + value[x][y]
                                 else:
-                                    floor_cost = value[new_x][new_y]
+                                    floor_cost = grid_costs[new_x][new_y]
                                     v2 = self.delta_cost[a] + floor_cost + value[new_x][new_y]
 
                                 # print (v2)
@@ -311,7 +316,9 @@ class DeliveryPlanner_PartB:
                                     value[x][y] = v2
                                     policy[x][y] = "move " + self.delta_directions[a]   
                                 if new_y==goal[1] and new_x==goal[0]:
-                                    policy[x][y] = "lift " + grid[new_x][new_y]
+                                    policy[x][y] =  "lift " + grid[new_x][new_y]
+                                    value[x][y]+=4
+
                         else:
                             policy[x][y] = "-1"
                 
@@ -351,8 +358,14 @@ class DeliveryPlanner_PartB:
                                     change = True
                                     value[x][y] = v2
                                     policy[x][y] = "move " + self.delta_directions[a]   
+                                if goal[0] == x and goal[1] == y and new_x>=0 and new_x<len(grid) and new_y>=0 and new_y<len(grid[0]):
+                                    if value[new_x][new_y]<target_neighbors_min_value:
+                                        target_neighbors_min_value = value[new_x][new_y]
+                                        policy[x][y] = "move " + self.delta_directions[a]   
                                 if new_y==goal[1] and new_x==goal[0]:
-                                    policy[x][y] = "down " + grid[new_x][new_y] 
+
+                                    policy[x][y] = "down " +  self.delta_directions[a] 
+                                    value[x][y]+=2
                                 
                         else:
                             policy[x][y] = "-1"
@@ -456,7 +469,7 @@ class DeliveryPlanner_PartC:
         self.delta_directions = ["n", "nw", "w", "sw", "s", "se", "e", "ne"]
 
         # Use this for a visual debug
-        self.delta_name = ['🡑', '🡔', '🡐', '🡗', '🡓', '🡖', '🡒', '🡕']
+        # self.delta_name = ['🡑', '🡔', '🡐', '🡗', '🡓', '🡖', '🡒', '🡕']
 
         # Costs for each move
         self.delta_cost = [self.ORTHOGONAL_MOVE_COST, self.DIAGONAL_MOVE_COST,
@@ -516,25 +529,125 @@ class DeliveryPlanner_PartC:
         grid = self.warehouse_state
         grid_costs = self.warehouse_cost
 
+        for col in range(len(grid[0])):
+            for row in range(len(grid)):
+                if self.warehouse_cost[row][col]=="w":
+                    grid_costs[row][col] = float("inf")
+        
+
         # You will need to fill in the algorithm here to find the policy
         # The following are what your algorithm should return for test case 1
+        collision_cost = 100
+        
         if pickup_box:
-            # To-box policy
-            # the below policy is hard coded to work for test case 1
-            policy = [
-                ['B', 'lift 1', 'move w'],
-                ['lift 1', -1, 'move nw'],
-                ['move n', 'move nw', 'move n'],
-            ]
+            # To box policy
+            
+            value = [[float("inf") for col in range(len(grid[0]))] for row in range(len(grid))]
+            policy = [[" " for col in range(len(grid[0]))] for row in range(len(grid))]
 
+            change = True
+            
+            while change:
+                change = False
+                for x in range(len(grid)):
+                    for y in range(len(grid[0])):
+                        if goal[0] == x and goal[1] == y:
+                            if value[x][y] != 0:
+                                value[x][y] = 0
+                                policy[x][y] = "B"
+                                change = True
+
+                        elif grid[x][y] == "." or grid[x][y] == "@":
+                            for a in range(len(self.delta)):
+                                v2 = 0
+                                
+                                for i in range(-2, 3):
+                                    a2 = (a + i) % len(self.delta)
+                                    new_x = x + self.delta[a2][0]
+                                    new_y = y + self.delta[a2][1]
+
+                                    if i == 0:
+                                        p2 = self.stochastic_probabilities["as_intended"]
+
+                                    elif i==-2 or i == 2:
+                                        p2 = (1.0 - self.stochastic_probabilities["sideways"]) / 2.0
+                                    else:
+                                        p2 = (1.0 - self.stochastic_probabilities["slanted"]) / 2.0
+                                    if new_y>=len(grid[0]) or new_y<0 or new_x>=len(grid) or new_x<0 or grid[new_x][new_y]=="#":
+                                        floor_cost = collision_cost
+                                        v2 += (self.delta_cost[a2] + floor_cost + value[x][y])*p2
+                                    else:
+                                        floor_cost = grid_costs[new_x][new_y]
+                                        v2 += (self.delta_cost[a2] + floor_cost + value[new_x][new_y])*p2
+                                    
+
+                                if v2 < value[x][y]:
+                                    change = True
+                                    value[x][y] = v2
+                                    policy[x][y] = "move " + self.delta_directions[a]   
+                                if new_y==goal[1] and new_x==goal[0]:
+                                    policy[x][y] = "lift " + grid[new_x][new_y]
+                                
+                        else:
+                            policy[x][y] = "-1"    
+                print(value)      
+                
         else:
-            # to-zone policy
-            # the below policy is hard coded to work for test case 1
-            policy = [
-                ['move e', 'move se', 'move s'],
-                ['move se', -1, 'down s'],
-                ['move e', 'down e', 'move n'],
-            ]
+            # Deliver policy
+            value = [[float("inf") for col in range(len(grid[0]))] for row in range(len(grid))]
+            policy = [[" " for col in range(len(grid[0]))] for row in range(len(grid))]
+
+            change = True
+            
+            while change:
+                change = False
+                
+                for x in range(len(grid)):
+                    for y in range(len(grid[0])):
+                        if goal[0] == x and goal[1] == y:
+                            if value[x][y] != 0:
+                                value[x][y] = 0                          
+                                change = True
+
+                        target_neighbors_min_value = float("inf")
+                        if grid[x][y] != "#":
+                            for a in range(len(self.delta)):
+                                v2 = 0
+                                for i in range(-2, 3):
+                                    a2 = (a + i) % len(self.delta)
+                                    new_x = x + self.delta[a2][0]
+                                    new_y = y + self.delta[a2][1]
+
+                                    if i == 0:
+                                        p2 = self.stochastic_probabilities["as_intended"]
+
+                                    elif i==-2 or i == 2:
+                                        p2 = (1.0 - self.stochastic_probabilities["sideways"]) / 2.0
+                                    else:
+                                        p2 = (1.0 - self.stochastic_probabilities["slanted"]) / 2.0
+                                    if new_y>=len(grid[0]) or new_y<0 or new_x>=len(grid) or new_x<0 or grid[new_x][new_y]=="#":
+                                        floor_cost = collision_cost
+                                        v2 += (self.delta_cost[a2] + floor_cost + value[x][y])*p2
+                                    else:
+                                        floor_cost = grid_costs[new_x][new_y]
+                                        v2 += (self.delta_cost[a2] + floor_cost + value[new_x][new_y])*p2
+                                
+
+                                if v2 < value[x][y]:
+                                    change = True
+                                    value[x][y] = v2
+                                    policy[x][y] = "move " + self.delta_directions[a]   
+                                if goal[0] == x and goal[1] == y and new_x>=0 and new_x<len(grid) and new_y>=0 and new_y<len(grid[0]):
+                                    if value[new_x][new_y]<target_neighbors_min_value:
+                                        target_neighbors_min_value = value[new_x][new_y]
+                                        policy[x][y] = "move " + self.delta_directions[a]   
+                                if new_y==goal[1] and new_x==goal[0]:
+                                    policy[x][y] = "down " +  self.delta_directions[a] 
+                                
+                        else:
+                            policy[x][y] = "-1"
+                
+        # print(policy)
 
         return policy
 
@@ -634,41 +747,41 @@ if __name__ == "__main__":
 
     # Testing for Part B
     # testcase 1
-    print('\nTesting for part B:')
-    warehouse = ['1..',
-                                '.#.',
-                                '..@']#['##.####1', '#.......', '@.......']
-
-    warehouse_cost =  [[3, 5, 2],
-                                     [10, 'w', 2],
-                                     [2, 10, 2]]
-    #[['w', 'w', 3, 'w', 'w', 'w', 'w', 12],
-                        # ['w', 8, 10, 2, 10, 4, 15, 8],
-                        # [15, 10, 10, 10, 7, 10, 2, 10]]
-
-    todo = ['1']
-
-    partB = DeliveryPlanner_PartB(warehouse, warehouse_cost, todo)
-    partB.plan_delivery(debug=True)
-
-    # Testing for Part C
-    # testcase 1
-    # print('\nTesting for part C:')
+    # print('\nTesting for part B:')
     # warehouse = ['1..',
-    #              '.#.',
-    #              '..@']
+    #                             '.#.',
+    #                             '..@']#['##.####1', '#.......', '@.......']
 
-    # warehouse_cost = [[13, 5, 6],
-    #                   [10, math.inf, 2],
-    #                   [2, 11, 2]]
+    # warehouse_cost =  [[3, 5, 2],
+    #                                  [10, 'w', 2],
+    #                                  [2, 10, 2]]
+    # #[['w', 'w', 3, 'w', 'w', 'w', 'w', 12],
+    #                     # ['w', 8, 10, 2, 10, 4, 15, 8],
+    #                     # [15, 10, 10, 10, 7, 10, 2, 10]]
 
     # todo = ['1']
 
-    # stochastic_probabilities = {
-    #     'as_intended': .70,
-    #     'slanted': .1,
-    #     'sideways': .05,
-    # }
+    # partB = DeliveryPlanner_PartB(warehouse, warehouse_cost, todo)
+    # partB.plan_delivery(debug=True)
 
-    # partC = DeliveryPlanner_PartC(warehouse, warehouse_cost, todo, stochastic_probabilities)
-    # partC.plan_delivery(debug=True)
+    # Testing for Part C
+    # testcase 1
+    print('\nTesting for part C:')
+    warehouse = ['1..',
+                 '.#.',
+                 '..@']
+
+    warehouse_cost = [[13, 5, 6],
+                      [10, math.inf, 2],
+                      [2, 11, 2]]
+
+    todo = ['1']
+
+    stochastic_probabilities = {
+        'as_intended': .70,
+        'slanted': .1,
+        'sideways': .05,
+    }
+
+    partC = DeliveryPlanner_PartC(warehouse, warehouse_cost, todo, stochastic_probabilities)
+    partC.plan_delivery(debug=True)
