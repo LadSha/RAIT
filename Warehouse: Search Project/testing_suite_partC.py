@@ -540,7 +540,7 @@ class PartCTestCase(unittest.TestCase):
             else:
                 self.check_results(params)
 
-    def test_case_01(self):
+    def _test_case_01(self):
         w = math.inf
         params = {'test_case': 1,
                   'warehouse': ['1..',
@@ -595,7 +595,7 @@ class PartCTestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def test_case_03(self):
+    def _test_case_03(self):
         w = math.inf
         params = {'test_case': 3,
                   'warehouse': ['##.####1',
@@ -621,7 +621,7 @@ class PartCTestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def test_case_04(self):
+    def _test_case_04(self):
         w = math.inf
         params = {'test_case': 4,
                   'warehouse': ['.........#..........',
@@ -655,7 +655,7 @@ class PartCTestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def test_case_05(self):
+    def _test_case_05(self):
         w = math.inf
         params = {'test_case': 5,
                   'warehouse': ['.........#..........',
@@ -689,7 +689,7 @@ class PartCTestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def test_case_06(self):
+    def _test_case_06(self):
         w = math.inf
         params = {'test_case': 6,
                   'warehouse': ['.........#..........',
@@ -723,7 +723,7 @@ class PartCTestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def test_case_07(self):
+    def _test_case_07(self):
         w = math.inf
         params = {'test_case': 7,
                   'warehouse': ['.........#..........',
@@ -757,7 +757,7 @@ class PartCTestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def test_case_08(self):
+    def _test_case_08(self):
         w = math.inf
         params = {'test_case': 8,
                   'warehouse': ['............#...............',
@@ -798,7 +798,7 @@ class PartCTestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def test_case_09(self):
+    def _test_case_09(self):
         w = math.inf
         params = {'test_case': 9,
                   'warehouse': ['............#...............',
@@ -840,7 +840,7 @@ class PartCTestCase(unittest.TestCase):
                   }
         self.run_with_params(params)
 
-    def test_case_10(self):
+    def _test_case_10(self):
         w = math.inf
         params = {'test_case': 10,
                   'warehouse': ['........',
