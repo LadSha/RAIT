@@ -36,7 +36,7 @@ VERBOSE_FLAG = False
 # which could result in a timeout, but useful for debugging
 # Note that enabling this will also enable DEBUGGING_SINGLE_PROCESS
 ########################################################################
-VISUALIZE_FLAG = False
+VISUALIZE_FLAG = True
 
 ########################################################################
 # For debugging set the time limit to a big number (like 600 or more)

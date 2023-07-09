@@ -94,7 +94,7 @@ class DeliveryPlanner_PartA:
                            self.DIAGONAL_MOVE_COST]
 
 
-    def _search(self, end=[2, 2], starting=[0, 2], obj='drop', box=5 ,debug=False):
+    def _search(self, end, starting, obj, box ,debug=False):
         """
         This method should be based on lesson modules for A*, see Search, Section 12-14.
         The bulk of the search logic should reside here, should you choose to use this starter code.
@@ -104,139 +104,230 @@ class DeliveryPlanner_PartA:
         """
 
         # get a shortcut variable for the warehouse (note this is just a view no copying)
-        grid = self.warehouse_viewer
-
-        moves = []
-
-        closed = {} #[[0 for row in range(len(grid[0]))] for col in range(len(grid))]
-
-        closed[(starting[0],starting[1])] = 1
-
-        expand = {}# [[-1 for row in range(len(grid[0]))] for col in range(len(grid))]
-        action = {}#[[-1 for row in range(len(grid[0]))] for col in range(len(grid))]
-        # policy = [[-1 for row in range(len(grid[0]))] for col in range(len(grid))]
+        
+        closed = set()
+        
 
         x = starting[0]
         y = starting[1]
-        act = 0
 
         g = 0
         h = heuristic(starting, end)
         f = g + h
-        open = [[f, g, h, y, x, act, act]]
+
+        open = [[f, g, h, x, y]]
         found = False
         resign = False
         count = 0
-
+        closed = set()
+        action = {}
+        expand = []
         while not found and not resign:
             if len(open) == 0:
                 resign = True
-
             else:
-             
-                open.sort()
-                open.reverse()
-
+                open.sort(reverse=True)
                 next = open.pop()
-
-                x = next[4]
-                y = next[3]
+                x = next[3]
+                y = next[4]
                 g = next[1]
-                act_made = next[5]
-                
-                current_loc = (x, y)
-
-                expand[(x,y)] = count
-
-                if act_made != 0:
-                    moves.append(act_made)
-                    action[(x,y)] = next[6]
-                count += 1
-
-                if -1 <= x - end[0] <= 1 and -1 <= y - end[1] <= 1 and [end[0]-x,end[1]-y]!=[0,0]:
+            
+                expand.append((x, y, count))
+                count+=1
+                if x==end[0] and y == end[1]:
+                    
+                    self.warehouse_viewer[x][y] = "."
                     found = True
+                    
+                for a in range(len(self.delta)):
+                    new_x = x + self.delta[a][0]
+                    new_y = y + self.delta[a][1]
+                    cost = self.delta_cost[a]
+                    if new_x==end[0] and new_y==end[1]:
+                        self.warehouse_viewer[new_x][new_y] = "."
+                        if obj=="pick":
+                            cost = DeliveryPlanner_PartA.BOX_LIFT_COST
+                        else:
+                            cost = DeliveryPlanner_PartA.BOX_DOWN_COST
+                    if self.warehouse_viewer[new_x][new_y]=="." and (new_x, new_y) not in closed:
+                        g2 = g + cost
+                        h2 = heuristic([new_x, new_y], end)
+                        f2 = g2 + h2
+                        open.append([f2, g2,h2,new_x,new_y])
+                        closed.add((new_x, new_y))
+                        action[(new_x, new_y)] = a
+        
+        moves = []
+        x = end[0]
+        y = end[1]
+        a = action[(x, y)]
+        current_loc = (x - self.delta[a][0], y - self.delta[a][1])
 
-                    if obj == 'pick':
-                        obj_action = 'lift ' + str(box)
-                        grid[end[0]][end[1]] = '.'
+        while x!=starting[0] or y!=starting[1]:
+            a = action[(x, y)]
+            x2 = x - self.delta[a][0]
+            y2 = y - self.delta[a][1]
+            moves.append("move " + self.delta_directions[a])
+            x = x2
+            y = y2
+        moves.reverse()
+        moves.pop()
+        if obj == "pick":
+            moves.append("lift " + str(box))
+        else:
+            moves.append("down " + self.delta_directions[self.delta.index([end[0]-current_loc[0], end[1]-current_loc[1]])])
+
+
+
+                 
+            
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # moves = []
+
+        # closed = {} #[[0 for row in range(len(grid[0]))] for col in range(len(grid))]
+
+        # closed[(starting[0],starting[1])] = 1
+
+        # expand = {}# [[-1 for row in range(len(grid[0]))] for col in range(len(grid))]
+        # action = {}#[[-1 for row in range(len(grid[0]))] for col in range(len(grid))]
+        # # policy = [[-1 for row in range(len(grid[0]))] for col in range(len(grid))]
+
+        # x = starting[0]
+        # y = starting[1]
+        # act = 0
+
+        # g = 0
+        # h = heuristic(starting, end)
+        # f = g + h
+        # open = [[f, g, h, y, x, act, act]]
+        # found = False
+        # resign = False
+        # count = 0
+
+        # while not found and not resign:
+        #     if len(open) == 0:
+        #         resign = True
+
+        #     else:
+             
+        #         open.sort()
+        #         open.reverse()
+
+        #         next = open.pop()
+
+        #         x = next[4]
+        #         y = next[3]
+        #         g = next[1]
+        #         act_made = next[5]
+                
+        #         current_loc = (x, y)
+
+        #         expand[(x,y)] = count
+
+        #         if act_made != 0:
+        #             moves.append(act_made)
+        #             action[(x,y)] = next[6]
+        #         count += 1
+
+        #         if -1 <= x - end[0] <= 1 and -1 <= y - end[1] <= 1 and [end[0]-x,end[1]-y]!=[0,0]:
+        #             found = True
+
+        #             if obj == 'pick':
+        #                 obj_action = 'lift ' + str(box)
+        #                 grid[end[0]][end[1]] = '.'
                         
 
-                    elif obj == 'drop':
-                        dir_x = end[0] - x
-                        dir_y = end[1] - y
-                        dir = [dir_x, dir_y]
+        #             elif obj == 'drop':
+        #                 dir_x = end[0] - x
+        #                 dir_y = end[1] - y
+        #                 dir = [dir_x, dir_y]
 
-                        if dir==[0,0]:
-                            #break
+        #                 if dir==[0,0]:
+        #                     #break
                             
-                            obj_action='need to go to diff cell'
+        #                     obj_action='need to go to diff cell'
 
-                        else:
-                            dir_facing = self.delta.index(dir)
-                            obj_action = 'down ' + self.delta_directions[dir_facing]
+        #                 else:
+        #                     dir_facing = self.delta.index(dir)
+        #                     obj_action = 'down ' + self.delta_directions[dir_facing]
 
-                    moves.append(obj_action)
+        #             moves.append(obj_action)
 
                
-                if abs(x - end[0])<=1 and abs(y - end[1])<=1 and [x - end[0],y - end[1]]!=[0,0]:
-                    found = True
+        #         if abs(x - end[0])<=1 and abs(y - end[1])<=1 and [x - end[0],y - end[1]]!=[0,0]:
+        #             found = True
 
-                else:
-                    for i in range(len(self.delta)):
+        #         else:
+        #             for i in range(len(self.delta)):
                        
-                        x2 = x + self.delta[i][0]
-                        y2 = y + self.delta[i][1]
-                        if x2 == end[0] and y2==end[0]:
-                            if obj == "pick":
-                                cost2 = DeliveryPlanner_PartA.BOX_LIFT_COST
-                            else:
-                                cost2 = DeliveryPlanner_PartA.BOX_DOWN_COST
-                        else:
-                            cost2 = self.delta_cost[i]
+        #                 x2 = x + self.delta[i][0]
+        #                 y2 = y + self.delta[i][1]
+        #                 if x2 == end[0] and y2==end[0]:
+        #                     if obj == "pick":
+        #                         cost2 = DeliveryPlanner_PartA.BOX_LIFT_COST
+        #                     else:
+        #                         cost2 = DeliveryPlanner_PartA.BOX_DOWN_COST
+        #                 else:
+        #                     cost2 = self.delta_cost[i]
 
-                        if (x2,y2) not in closed and grid[x2][y2] == '.':
+        #                 if (x2,y2) not in closed and grid[x2][y2] == '.':
     
-                            g2 = g + cost2
-                            h2 = heuristic([x2, y2], end)
-                            f2 = g2 + h2
-                            act_format = "move " + self.delta_directions[i]
-                            open.append([f2, h2, g2, y2, x2, act_format, i])
-                            closed[(x2,y2)] = 1
+        #                     g2 = g + cost2
+        #                     h2 = heuristic([x2, y2], end)
+        #                     f2 = g2 + h2
+        #                     act_format = "move " + self.delta_directions[i]
+        #                     open.append([f2, h2, g2, y2, x2, act_format, i])
+        #                     closed[(x2,y2)] = 1
             
 
-        y,x=current_loc
+        # y,x=current_loc
 
-        move_plan=[]
-        if obj == 'pick':
-            obj_action = 'lift ' + str(box)
-            grid[end[0]][end[1]] = '.'
+        # move_plan=[]
+        # if obj == 'pick':
+        #     obj_action = 'lift ' + str(box)
+        #     grid[end[0]][end[1]] = '.'
 
-        elif obj == 'drop':
-            dir_y = end[0] - y
-            dir_x = end[1] - x
-            dir = [dir_y, dir_x]
-            if abs(dir_y)<=1 and abs(dir_x)<=1:
-                dir_facing = self.delta.index(dir)
-                obj_action = 'down ' + self.delta_directions[dir_facing]
-            else:
-                dir_facing='drop obj unable to compute y x' +str(dir_y) + str(dir_x)
-                obj_action = dir_facing
+        # elif obj == 'drop':
+        #     dir_y = end[0] - y
+        #     dir_x = end[1] - x
+        #     dir = [dir_y, dir_x]
+        #     if abs(dir_y)<=1 and abs(dir_x)<=1:
+        #         dir_facing = self.delta.index(dir)
+        #         obj_action = 'down ' + self.delta_directions[dir_facing]
+        #     else:
+        #         dir_facing='drop obj unable to compute y x' +str(dir_y) + str(dir_x)
+        #         obj_action = dir_facing
 
-        move_plan.append(obj_action)
+        # move_plan.append(obj_action)
 
 
-        while abs(y - starting[0]) != 0 or  abs(x - starting[1]) !=0:
-            move_made='move ' + self.delta_directions[action[(y,x)]]
-            move_plan.append(move_made)
-            x2=x-self.delta[action[(y,x)]][1]
-            y2=y-self.delta[action[(y,x)]][0]
-            # policy[y2][x2]=self.delta_directions[action[y][x]]
-            x=x2
-            y=y2
+        # while abs(y - starting[0]) != 0 or  abs(x - starting[1]) !=0:
+        #     move_made='move ' + self.delta_directions[action[(y,x)]]
+        #     move_plan.append(move_made)
+        #     x2=x-self.delta[action[(y,x)]][1]
+        #     y2=y-self.delta[action[(y,x)]][0]
+        #     # policy[y2][x2]=self.delta_directions[action[y][x]]
+        #     x=x2
+        #     y=y2
 
-        move_plan.reverse()
+        # move_plan.reverse()
         
-        return move_plan, current_loc
+        return moves, current_loc
 
         
 
@@ -265,17 +356,16 @@ class DeliveryPlanner_PartA:
         current_loc = self.robot_position
 
         for item in self.todo:
-            print('box loc', self.box_locations.get(item))
-            print('end loc', self.dropzone)
+
             path_addition, current_loc = self._search(self.box_locations.get(item), current_loc, 'pick', item)
             path += path_addition
+            
 
             path_addition, current_loc = self._search(self.dropzone, current_loc, 'drop', item)
 
             path += path_addition
 
-            print('PATH', path)
-
+        print(path)
         return path
 
 
@@ -710,7 +800,7 @@ class DeliveryPlanner_PartC:
                                         
                                         v2 += (self.delta_cost[a2] + collision_cost + value[x][y])*p2
                                     elif new_x==goal[0] and new_y==goal[1]:
-                                        v2 += (DeliveryPlanner_PartC.BOX_LIFT_COST + value[new_x][new_y])*p2
+                                        v2 += (value[new_x][new_y])*p2+DeliveryPlanner_PartC.BOX_LIFT_COST
                                     else:
                                         floor_cost = grid_costs[new_x][new_y]
                                         v2 += (self.delta_cost[a2] + floor_cost + value[new_x][new_y])*p2
@@ -769,7 +859,7 @@ class DeliveryPlanner_PartC:
                                         floor_cost = collision_cost
                                         v2 += (self.delta_cost[a2] + floor_cost + value[x][y])*p2
                                     elif new_x==goal[0] and new_y==goal[1]:
-                                        v2 += (DeliveryPlanner_PartC.BOX_DOWN_COST + value[new_x][new_y])*p2
+                                        v2 += ( value[new_x][new_y])*p2+DeliveryPlanner_PartC.BOX_DOWN_COST
                                     
                                     else:
                                         floor_cost = grid_costs[new_x][new_y]
@@ -876,38 +966,42 @@ if __name__ == "__main__":
 
     # Testing for Part A
     # testcase 1
-    # print('\nTesting for part A:')
+    print('\nTesting for part A:')
 
-    # from testing_suite_partA import wrap_warehouse_object, Counter
+    from testing_suite_partA import wrap_warehouse_object, Counter
 
-    # # test case data starts here
-    # warehouse = [
-    #     '######',
-    #     '#....#',
-    #     '#.1#2#',
-    #     '#..#.#',
-    #     '#...@#',
-    #     '######',
-    # ]
-    # todo = list('12')
-    # benchmark_cost = 23
-    # viewed_cell_count_threshold = 20
-    # robot_position = (4,4)
-    # box_locations = {
-    #     '1': (2,2),
-    #     '2': (2,4),
-    # }
+    # test case data starts here
+    warehouse = [
+        '######',
+        '#....#',
+        '#.1#2#',
+        '#..#.#',
+        '#...@#',
+        '######',
+    ]
+    todo = list('12')
+    benchmark_cost = 23
+    viewed_cell_count_threshold = 20
+    robot_position = (4,4)
+    box_locations = {
+        '1': (2,2),
+        '2': (2,4),
+    }
+    
+   
     # # # test case data ends here
 
-    # viewed_cells = Counter()
-    # warehouse_access = wrap_warehouse_object(warehouse, viewed_cells)
-    # partA = DeliveryPlanner_PartA(warehouse_access, robot_position, todo, box_locations)
-    # partA.plan_delivery(debug=True)
-    # # Note that the viewed cells for the hard coded solution provided
-    # # in the initial template code will be 0 because no actual search
-    # # process took place that accessed the warehouse
-    # print('Viewed Cells:', len(viewed_cells))
-    # print('Viewed Cell Count Threshold:', viewed_cell_count_threshold)
+    viewed_cells = Counter()
+    warehouse_access = wrap_warehouse_object(warehouse, viewed_cells)
+    partA = DeliveryPlanner_PartA(warehouse_access, robot_position, todo, box_locations)
+    
+    # partA._search(grid=warehouse, end=[4, 4], starting=[3, 2], obj='drop', box=1 ,debug=True)
+    partA.plan_delivery(debug=True)
+    # Note that the viewed cells for the hard coded solution provided
+    # in the initial template code will be 0 because no actual search
+    # process took place that accessed the warehouse
+    print('Viewed Cells:', len(viewed_cells))
+    print('Viewed Cell Count Threshold:', viewed_cell_count_threshold)
 
     # Testing for Part B
     # testcase 1
@@ -930,22 +1024,4 @@ if __name__ == "__main__":
 
     # Testing for Part C
     # testcase 1
-    print('\nTesting for part C:')
-    warehouse = ['1..',
-                                '.#.',
-                                '..@']
-
-    warehouse_cost = [[13, 5, 6],
-                                     [10, 'w', 2],
-                                     [2, 11, 2]]
-
-    todo = ['1']
-
-    stochastic_probabilities = {
-        'as_intended': .70,
-        'slanted': .1,
-        'sideways': .05,
-    }
-
-    partC = DeliveryPlanner_PartC(warehouse, warehouse_cost, todo, stochastic_probabilities)
-    partC.plan_delivery(debug=True)
+  

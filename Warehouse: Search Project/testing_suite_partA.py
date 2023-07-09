@@ -28,7 +28,7 @@ except Exception:
 # For debugging this flag can be set to True to print state 
 # which could result in a timeout
 ########################################################################
-VERBOSE_FLAG = False
+VERBOSE_FLAG = True
 
 ########################################################################
 # For testing actions in the warehouse via keyboard input
@@ -37,7 +37,7 @@ VERBOSE_FLAG = False
 # ctrl/command + <direction> will put a box down
 # Note that this will also enable VISUALIZE_FLAG
 ########################################################################
-TEST_MODE = False
+TEST_MODE = True
 
 ########################################################################
 # For visualization this flag can be set to True to display a GUI
@@ -55,7 +55,7 @@ TIME_LIMIT = 5  # seconds
 # If your debugger does not handle multiprocess debugging very easily
 # then when debugging set the following flag true.
 ########################################################################
-DEBUGGING_SINGLE_PROCESS = False
+DEBUGGING_SINGLE_PROCESS = True
 
 # Necessary for GUI visualization, don't modify these lines
 VISUALIZE_FLAG = True if TEST_MODE else VISUALIZE_FLAG
@@ -454,7 +454,7 @@ class PartATestCase(unittest.TestCase):
 
                 self.check_results( params )
    
-    def test_case_01(self):
+    def _test_case_01(self):
         params = {'test_case': 1,
                   'warehouse': [
                       '######',
@@ -488,7 +488,7 @@ class PartATestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def test_case_03(self):
+    def _test_case_03(self):
         params = {'test_case': 3,
                   'warehouse': [
                       '#############',
@@ -504,7 +504,7 @@ class PartATestCase(unittest.TestCase):
         self.run_with_params(params)
 
     # # *** CREDIT TO: Dana Johnson for adding this test case
-    def test_case_04(self):
+    def _test_case_04(self):
         params = {'test_case': 4,
                   'warehouse': [
                       '########',
@@ -524,7 +524,7 @@ class PartATestCase(unittest.TestCase):
         self.run_with_params(params)
 
     # *** CREDIT TO: Dana Johnson for adding this test case
-    def test_case_05(self):
+    def _test_case_05(self):
         params = {'test_case': 5,
                   'warehouse': [
                       '##########',
@@ -541,7 +541,7 @@ class PartATestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def test_case_06(self):
+    def _test_case_06(self):
         params = {'test_case': 6,
                   'warehouse': [
                       '########',
@@ -559,7 +559,7 @@ class PartATestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def test_case_07(self):
+    def _test_case_07(self):
         params = {'test_case': 7,
                   'warehouse': [
                       '########',
@@ -577,7 +577,7 @@ class PartATestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def test_case_08(self):
+    def _test_case_08(self):
         params = {'test_case': 8,
                   'warehouse' : [
                       '###########',
@@ -596,7 +596,7 @@ class PartATestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def test_case_09(self):
+    def _test_case_09(self):
         params = {'test_case': 9,
                   'warehouse' : [
                       '###########',
@@ -617,7 +617,7 @@ class PartATestCase(unittest.TestCase):
                   }
         self.run_with_params(params)
 
-    def test_case_10(self):
+    def _test_case_10(self):
         params = {'test_case': 10,
                   'warehouse' : [
                       '#######################',
