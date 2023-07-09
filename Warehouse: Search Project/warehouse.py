@@ -779,40 +779,37 @@ class DeliveryPlanner_PartC:
                                 if v2 < value[x][y]:
                                     change = True
                                     value[x][y] = v2
-                                    # policy[x][y] = "move " + self.delta_directions[a]   
-                                # if goal[0] == x and goal[1] == y and new_x>=0 and new_x<len(grid) and new_y>=0 and new_y<len(grid[0]):
-                                #     if value[new_x][new_y]<target_neighbors_min_value:
-                                #         target_neighbors_min_value = value[new_x][new_y]
-                                #         policy[x][y] = "move " + self.delta_directions[a]   
-                                # if new_y==goal[1] and new_x==goal[0]:
-                                #     policy[x][y] = "down " +  self.delta_directions[a] 
+                                    policy[x][y] = "move " + self.delta_directions[a]   
                                 
                         else:
                             policy[x][y] = "-1"
             
-            for x in range(len(grid)):
-                for y in range(len(grid[0])):
-                    if grid[x][y]!="#":
-                        neighbors_min_val = float("inf")
-                        for a in range(len(self.delta)):
-                            new_x = x + self.delta[a][0]
-                            new_y = y + self.delta[a][1]
+            # for x in range(len(grid)):
+            #     for y in range(len(grid[0])):
+            #         if x==goal[0] and y==goal[1]:
+            #         # if grid[x][y]!="#":
+            #             neighbors_min_val = float("inf")
+            #             for a in range(len(self.delta)):
+            #                 new_x = goal[0] + self.delta[a][0]
+            #                 new_y = goal[1] + self.delta[a][1]
                             
-                            if new_x>=0 and new_x<len(grid) and new_y>=0 and new_y<len(grid[0]):
-                                if value[new_x][new_y]<neighbors_min_val:
-                                    neighbors_min_val = value[new_x][new_y]
-                                    policy[x][y] = "move " + self.delta_directions[a]
+            #                 if new_x>=0 and new_x<len(grid) and new_y>=0 and new_y<len(grid[0]):
+            #                     if value[new_x][new_y]<neighbors_min_val:
+            #                         neighbors_min_val = value[new_x][new_y]
+            #                         policy[goal[0]][goal[1]] = "move " + self.delta_directions[a]
                 
             
             
 
-
+            neighbors_min_val = float("inf")
             for a in range(len(self.delta)):
                 new_x = goal[0] + self.delta[a][0]
                 new_y = goal[1] + self.delta[a][1]
-                if  new_x>=0 and new_x<len(grid) and new_y>=0 and new_y<len(grid[0]) and grid[new_x][new_y]!="#":
-                    
+                if  new_x>=0 and new_x<len(grid) and new_y>=0 and new_y<len(grid[0]) and grid[new_x][new_y]!="#":    
                     policy[new_x][new_y] = "down " + self.delta_directions[self.delta.index([goal[0]-new_x, goal[1]-new_y])]
+                    if value[new_x][new_y]<neighbors_min_val:
+                        neighbors_min_val = value[new_x][new_y]
+                        policy[goal[0]][goal[1]] = "move " + self.delta_directions[a]
                     
         print(value)
 
