@@ -37,14 +37,14 @@ VERBOSE_FLAG = True
 # ctrl/command + <direction> will put a box down
 # Note that this will also enable VISUALIZE_FLAG
 ########################################################################
-TEST_MODE = True
+TEST_MODE = False
 
 ########################################################################
 # For visualization this flag can be set to True to display a GUI
 # which could result in a timeout, but useful for debugging
 # Note that enabling this will also enable DEBUGGING_SINGLE_PROCESS
 ########################################################################
-VISUALIZE_FLAG = False
+VISUALIZE_FLAG = True
 
 ########################################################################
 # For debugging set the time limit to a big number (like 600 or more)
@@ -454,7 +454,7 @@ class PartATestCase(unittest.TestCase):
 
                 self.check_results( params )
    
-    def _test_case_01(self):
+    def test_case_01(self):
         params = {'test_case': 1,
                   'warehouse': [
                       '######',
@@ -474,7 +474,7 @@ class PartATestCase(unittest.TestCase):
     # # Notice that we have included several extra test cases below.
     # # You can uncomment one or more of these for extra tests.
     #
-    def test_case_02(self):
+    def _test_case_02(self):
         params = {'test_case': 2,
                   'warehouse': [
                       '#############',
@@ -596,7 +596,7 @@ class PartATestCase(unittest.TestCase):
 
         self.run_with_params(params)
 
-    def _test_case_09(self):
+    def test_case_09(self):
         params = {'test_case': 9,
                   'warehouse' : [
                       '###########',

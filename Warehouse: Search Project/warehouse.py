@@ -134,10 +134,10 @@ class DeliveryPlanner_PartA:
             
                 expand.append((x, y, count))
                 count+=1
-                if x==end[0] and y == end[1]:
+                # if x==end[0] and y == end[1]:
                     
-                    self.warehouse_viewer[x][y] = "."
-                    found = True
+                #     self.warehouse_viewer[x][y] = "."
+                #     found = True
                     
                 for a in range(len(self.delta)):
                     new_x = x + self.delta[a][0]
@@ -149,6 +149,9 @@ class DeliveryPlanner_PartA:
                             cost = DeliveryPlanner_PartA.BOX_LIFT_COST
                         else:
                             cost = DeliveryPlanner_PartA.BOX_DOWN_COST
+                        self.warehouse_viewer[x][y] = "."
+                        found = True
+                        action[(new_x, new_y)] = a
                     if self.warehouse_viewer[new_x][new_y]=="." and (new_x, new_y) not in closed:
                         g2 = g + cost
                         h2 = heuristic([new_x, new_y], end)
@@ -156,6 +159,8 @@ class DeliveryPlanner_PartA:
                         open.append([f2, g2,h2,new_x,new_y])
                         closed.add((new_x, new_y))
                         action[(new_x, new_y)] = a
+                    
+
         
         moves = []
         x = end[0]
@@ -170,8 +175,13 @@ class DeliveryPlanner_PartA:
             moves.append("move " + self.delta_directions[a])
             x = x2
             y = y2
+        
         moves.reverse()
-        moves.pop()
+
+        if len(moves)>0:
+            moves.pop()
+        if starting[0]==end[0] and starting[1]==end[1]:
+            moves.append("move " + self.delta_directions[self.delta.index([current_loc[0]-end[0], current_loc[1]-end[1]])])
         if obj == "pick":
             moves.append("lift " + str(box))
         else:
@@ -971,22 +981,40 @@ if __name__ == "__main__":
     from testing_suite_partA import wrap_warehouse_object, Counter
 
     # test case data starts here
-    warehouse = [
-        '######',
-        '#....#',
-        '#.1#2#',
-        '#..#.#',
-        '#...@#',
-        '######',
-    ]
-    todo = list('12')
-    benchmark_cost = 23
-    viewed_cell_count_threshold = 20
-    robot_position = (4,4)
-    box_locations = {
-        '1': (2,2),
-        '2': (2,4),
-    }
+    # warehouse = [
+    # '#####',
+    # '#D###',
+    # '#218#',
+    # '#3@7#',
+    # '#456#',
+    # '#####',
+    # ]
+    # todo = list('12')
+    # benchmark_cost = 23
+    # viewed_cell_count_threshold = 20
+    # robot_position = (3,2)
+    # box_locations = {
+    #     '1': (2,2),
+    #     '2': (2,1),
+    # }
+
+
+    # warehouse = [
+    #     '######',
+    #     '#....#',
+    #     '#.1#2#',
+    #     '#..#.#',
+    #     '#...@#',
+    #     '######',
+    # ]
+    # todo = list('12')
+    # benchmark_cost = 23
+    # viewed_cell_count_threshold = 20
+    # robot_position = (4,4)
+    # box_locations = {
+    #     '1': (2,2),
+    #     '2': (2,4),
+    # }
     
    
     # # # test case data ends here
