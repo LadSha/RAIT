@@ -141,10 +141,6 @@ class DeliveryPlanner_PartA:
                     cost = self.delta_cost[a]
                     if new_x==end[0] and new_y==end[1]:
                         self.warehouse_viewer[new_x][new_y] = "."
-                        # if obj=="pick":
-                        #     cost = DeliveryPlanner_PartA.BOX_LIFT_COST
-                        # else:
-                        #     cost = DeliveryPlanner_PartA.BOX_DOWN_COST
                         
                         found = True
                         action[(new_x, new_y)] = a
@@ -178,160 +174,12 @@ class DeliveryPlanner_PartA:
             moves.pop()
         if starting[0]==end[0] and starting[1]==end[1]:
             moves.append("move " + self.delta_directions[self.delta.index([current_loc[0]-end[0], current_loc[1]-end[1]])])
-        if obj == "pick":
+        if obj =="lift":
             moves.append("lift " + str(box))
         else:
             moves.append("down " + self.delta_directions[self.delta.index([end[0]-current_loc[0], end[1]-current_loc[1]])])
 
 
-
-                 
-            
-                    
-
-
-
-
-
-
-
-
-
-
-
-
-        # grid = self.warehouse_viewer
-
-
-        # moves = []
-
-        # closed = {} #[[0 for row in range(len(grid[0]))] for col in range(len(grid))]
-
-        # closed[(starting[0],starting[1])] = 1
-
-        # expand = {}# [[-1 for row in range(len(grid[0]))] for col in range(len(grid))]
-        # action = {}#[[-1 for row in range(len(grid[0]))] for col in range(len(grid))]
-        # # policy = [[-1 for row in range(len(grid[0]))] for col in range(len(grid))]
-
-        # x = starting[0]
-        # y = starting[1]
-        # act = 0
-
-        # g = 0
-        # h = heuristic(starting, end)
-        # f = g + h
-        # open = [[f, g, h, y, x, act, act]]
-        # found = False
-        # resign = False
-        # count = 0
-
-        # while not found and not resign:
-        #     if len(open) == 0:
-        #         resign = True
-
-        #     else:
-             
-        #         open.sort()
-        #         open.reverse()
-
-        #         next = open.pop()
-
-        #         x = next[4]
-        #         y = next[3]
-        #         g = next[1]
-        #         act_made = next[5]
-                
-        #         current_loc = (x, y)
-
-        #         expand[(x,y)] = count
-
-        #         if act_made != 0:
-        #             moves.append(act_made)
-        #             action[(x,y)] = next[6]
-        #         count += 1
-
-        #         if -1 <= x - end[0] <= 1 and -1 <= y - end[1] <= 1 and [end[0]-x,end[1]-y]!=[0,0]:
-        #             found = True
-
-        #             if obj == 'pick':
-        #                 obj_action = 'lift ' + str(box)
-        #                 grid[end[0]][end[1]] = '.'
-                        
-
-        #             elif obj == 'drop':
-        #                 dir_x = end[0] - x
-        #                 dir_y = end[1] - y
-        #                 dir = [dir_x, dir_y]
-
-        #                 if dir==[0,0]:
-        #                     #break
-                            
-        #                     obj_action='need to go to diff cell'
-
-        #                 else:
-        #                     dir_facing = self.delta.index(dir)
-        #                     obj_action = 'down ' + self.delta_directions[dir_facing]
-
-        #             moves.append(obj_action)
-
-               
-        #         if abs(x - end[0])<=1 and abs(y - end[1])<=1 and [x - end[0],y - end[1]]!=[0,0]:
-        #             found = True
-
-        #         else:
-        #             for i in range(len(self.delta)):
-                       
-        #                 x2 = x + self.delta[i][0]
-        #                 y2 = y + self.delta[i][1]
-        #                 if x2 == end[0] and y2==end[0]:
-        #                     if obj == "pick":
-        #                         cost2 = DeliveryPlanner_PartA.BOX_LIFT_COST
-        #                     else:
-        #                         cost2 = DeliveryPlanner_PartA.BOX_DOWN_COST
-        #                 else:
-        #                     cost2 = self.delta_cost[i]
-
-        #                 if (x2,y2) not in closed and grid[x2][y2] == '.':
-    
-        #                     g2 = g + cost2
-        #                     h2 = heuristic([x2, y2], end)
-        #                     f2 = g2 + h2
-        #                     act_format = "move " + self.delta_directions[i]
-        #                     open.append([f2, h2, g2, y2, x2, act_format, i])
-        #                     closed[(x2,y2)] = 1
-            
-
-        # y,x=current_loc
-
-        # move_plan=[]
-        # if obj == 'pick':
-        #     obj_action = 'lift ' + str(box)
-        #     grid[end[0]][end[1]] = '.'
-
-        # elif obj == 'drop':
-        #     dir_y = end[0] - y
-        #     dir_x = end[1] - x
-        #     dir = [dir_y, dir_x]
-        #     if abs(dir_y)<=1 and abs(dir_x)<=1:
-        #         dir_facing = self.delta.index(dir)
-        #         obj_action = 'down ' + self.delta_directions[dir_facing]
-        #     else:
-        #         dir_facing='drop obj unable to compute y x' +str(dir_y) + str(dir_x)
-        #         obj_action = dir_facing
-
-        # move_plan.append(obj_action)
-
-
-        # while abs(y - starting[0]) != 0 or  abs(x - starting[1]) !=0:
-        #     move_made='move ' + self.delta_directions[action[(y,x)]]
-        #     move_plan.append(move_made)
-        #     x2=x-self.delta[action[(y,x)]][1]
-        #     y2=y-self.delta[action[(y,x)]][0]
-        #     # policy[y2][x2]=self.delta_directions[action[y][x]]
-        #     x=x2
-        #     y=y2
-
-        # move_plan.reverse()
         
         return moves, current_loc
 
@@ -363,15 +211,14 @@ class DeliveryPlanner_PartA:
 
         for item in self.todo:
 
-            path_addition, current_loc = self._search(self.box_locations.get(item), current_loc, 'pick', item)
-            path += path_addition
+            path_lift, current_loc = self._search(self.box_locations.get(item), current_loc, 'lift', item)
+            path += path_lift
             
 
-            path_addition, current_loc = self._search(self.dropzone, current_loc, 'drop', item)
+            path_drop, current_loc = self._search(self.dropzone, current_loc, 'drop', item)
 
-            path += path_addition
+            path += path_drop
 
-        print(path)
         return path
 
 
@@ -849,28 +696,31 @@ class DeliveryPlanner_PartC:
                         elif grid[x][y] != "#":
                             for a in range(len(self.delta)):
                                 v2 = 0
-                                for i in range(-2, 3):
-                                    a2 = (a + i) % len(self.delta)
-                                    new_x = x + self.delta[a2][0]
-                                    new_y = y + self.delta[a2][1]
+                                if new_x==goal[0] and new_y==goal[1]:
+                                    v2 = ( value[new_x][new_y])+DeliveryPlanner_PartC.BOX_DOWN_COST
+                                else:
+                                    for i in range(-2, 3):
+                                        a2 = (a + i) % len(self.delta)
+                                        new_x = x + self.delta[a2][0]
+                                        new_y = y + self.delta[a2][1]
 
-                                    if i == 0:
-                                        p2 = self.stochastic_probabilities["as_intended"]
+                                        if i == 0:
+                                            p2 = self.stochastic_probabilities["as_intended"]
 
-                                    elif i==-2 or i == 2:
-                                        p2 = (self.stochastic_probabilities["sideways"]) 
-                                    else:
-                                        p2 = (self.stochastic_probabilities["slanted"]) 
-                                    if new_y>=len(grid[0]) or new_y<0 or new_x>=len(grid) or new_x<0 or grid[new_x][new_y]=="#":
-                                        floor_cost = collision_cost
-                                        v2 += (self.delta_cost[a2] + floor_cost + value[x][y])*p2
-                                    elif new_x==goal[0] and new_y==goal[1]:
-                                        v2 += ( value[new_x][new_y])*p2+DeliveryPlanner_PartC.BOX_DOWN_COST
+                                        elif i==-2 or i == 2:
+                                            p2 = (self.stochastic_probabilities["sideways"]) 
+                                        else:
+                                            p2 = (self.stochastic_probabilities["slanted"]) 
+                                        if new_y>=len(grid[0]) or new_y<0 or new_x>=len(grid) or new_x<0 or grid[new_x][new_y]=="#":
+                                            floor_cost = collision_cost
+                                            v2 += (self.delta_cost[a2] + floor_cost + value[x][y])*p2
+                                        # elif new_x==goal[0] and new_y==goal[1]:
+                                        #     v2 = ( value[new_x][new_y])+DeliveryPlanner_PartC.BOX_DOWN_COST
+                                        
+                                        else:
+                                            floor_cost = grid_costs[new_x][new_y]
+                                            v2 += (self.delta_cost[a2] + floor_cost + value[new_x][new_y])*p2
                                     
-                                    else:
-                                        floor_cost = grid_costs[new_x][new_y]
-                                        v2 += (self.delta_cost[a2] + floor_cost + value[new_x][new_y])*p2
-                                
 
                                 if v2 < value[x][y]:
                                     change = True
