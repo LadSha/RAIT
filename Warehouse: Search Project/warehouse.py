@@ -23,7 +23,8 @@ if OUTPUT_UNIQUE_FILE_ID:
     print(f'Unique file ID: {file_hash}')
 
 def heuristic(grid_coor, goal_coor):
-    return abs(goal_coor[0] - grid_coor[0]) + abs(goal_coor[1] - grid_coor[1])
+    h = 2*(abs(goal_coor[0] - grid_coor[0]) + abs(goal_coor[1] - grid_coor[1])) + 3*math.sqrt((goal_coor[0] - grid_coor[0])**2 + (goal_coor[1] - grid_coor[1])**2)
+    return h # abs(goal_coor[0] - grid_coor[0]) + abs(goal_coor[1] - grid_coor[1])
 
 class DeliveryPlanner_PartA:
     """
@@ -103,25 +104,27 @@ class DeliveryPlanner_PartA:
         necessary, except for the debug argument which must remain with a default of False
         """
 
-        # get a shortcut variable for the warehouse (note this is just a view no copying)
-        
-        closed = set()
-        
+
+
+        weight = 1
+
+
+        closed = set() 
 
         x = starting[0]
         y = starting[1]
 
         g = 0
         h = heuristic(starting, end)
-        f = g + h
+        f = g + h*weight
 
         open = [[f, g, h, x, y]]
         found = False
         resign = False
-        count = 0
+
         closed = set()
         action = {}
-        expand = []
+
         while not found and not resign:
             if len(open) == 0:
                 resign = True
@@ -131,37 +134,30 @@ class DeliveryPlanner_PartA:
                 x = next[3]
                 y = next[4]
                 g = next[1]
-            
-                expand.append((x, y, count))
-                count+=1
-                # if x==end[0] and y == end[1]:
-                    
-                #     self.warehouse_viewer[x][y] = "."
-                #     found = True
-                    
+                            
                 for a in range(len(self.delta)):
                     new_x = x + self.delta[a][0]
                     new_y = y + self.delta[a][1]
                     cost = self.delta_cost[a]
                     if new_x==end[0] and new_y==end[1]:
                         self.warehouse_viewer[new_x][new_y] = "."
-                        if obj=="pick":
-                            cost = DeliveryPlanner_PartA.BOX_LIFT_COST
-                        else:
-                            cost = DeliveryPlanner_PartA.BOX_DOWN_COST
-                        self.warehouse_viewer[x][y] = "."
+                        # if obj=="pick":
+                        #     cost = DeliveryPlanner_PartA.BOX_LIFT_COST
+                        # else:
+                        #     cost = DeliveryPlanner_PartA.BOX_DOWN_COST
+                        
                         found = True
                         action[(new_x, new_y)] = a
+                        break
                     if self.warehouse_viewer[new_x][new_y]=="." and (new_x, new_y) not in closed:
                         g2 = g + cost
                         h2 = heuristic([new_x, new_y], end)
-                        f2 = g2 + h2
+                        f2 = g2 + h2*weight
                         open.append([f2, g2,h2,new_x,new_y])
                         closed.add((new_x, new_y))
                         action[(new_x, new_y)] = a
                     
 
-        
         moves = []
         x = end[0]
         y = end[1]
@@ -204,7 +200,7 @@ class DeliveryPlanner_PartA:
 
 
 
-
+        # grid = self.warehouse_viewer
 
 
         # moves = []
@@ -999,22 +995,22 @@ if __name__ == "__main__":
     # }
 
 
-    # warehouse = [
-    #     '######',
-    #     '#....#',
-    #     '#.1#2#',
-    #     '#..#.#',
-    #     '#...@#',
-    #     '######',
-    # ]
-    # todo = list('12')
-    # benchmark_cost = 23
-    # viewed_cell_count_threshold = 20
-    # robot_position = (4,4)
-    # box_locations = {
-    #     '1': (2,2),
-    #     '2': (2,4),
-    # }
+    warehouse = [
+        '######',
+        '#....#',
+        '#.1#2#',
+        '#..#.#',
+        '#...@#',
+        '######',
+    ]
+    todo = list('12')
+    benchmark_cost = 23
+    viewed_cell_count_threshold = 20
+    robot_position = (4,4)
+    box_locations = {
+        '1': (2,2),
+        '2': (2,4),
+    }
     
    
     # # # test case data ends here
